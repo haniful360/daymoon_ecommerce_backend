@@ -14,9 +14,11 @@ describe('AppController', () => {
     appController = app.get<AppController>(AppController);
   });
 
-  describe('root', () => {
-    it('should return "Hello World!"', () => {
-      expect(appController.getHello()).toBe('Hello World!');
+  describe('health', () => {
+    it('should return system UP status', () => {
+      const health = appController.getHealth();
+      expect(health.status).toBe('UP');
+      expect(health.service).toContain('Daymoon');
     });
   });
 });

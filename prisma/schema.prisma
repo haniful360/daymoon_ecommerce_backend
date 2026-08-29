@@ -1,11 +1,657 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
+// Prisma Schema for Daymoon B2B Multi-Vendor Marketplace & Factory Sourcing
 
 generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"
+}
+
+
+enum Role {
+  BUYER
+  SELLER
+  SUPER_ADMIN
+}
+
+enum VerificationStatus {
+  PENDING
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+}
+
+enum MembershipTier {
+  FREE
+  BASIC
+  STANDARD
+  PREMIUM
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+  EXPIRED
+}
+
+enum DocumentType {
+  BUSINESS_LICENSE
+  TAX_CERTIFICATE
+  FACTORY_INSPECTION
+  ISO_CERTIFICATE
+  CE_CERTIFICATE
+  BANK_STATEMENT
+  EXPORT_LICENSE
+  OTHER
+}
+
+enum Incoterm {
+  FOB
+  CIF
+  EXW
+  DDP
+  DAP
+  CFR
+  FCA
+}
+
+enum CustomizationType {
+  CUSTOM_LOGO
+  CUSTOM_PACKAGING
+  GRAPHIC_CUSTOMIZATION
+  OEM_FULL_DESIGN
+}
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  CONFIRMED
+  IN_PRODUCTION
+  QA_INSPECTION
+  READY_FOR_DISPATCH
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum RfqStatus {
+  OPEN
+  UNDER_REVIEW
+  QUOTED
+  ACCEPTED
+  REJECTED
+  EXPIRED
+  CLOSED
+}
+
+enum QuoteStatus {
+  DRAFT
+  SUBMITTED
+  ACCEPTED
+  REJECTED
+  EXPIRED
+}
+
+enum PayoutStatus {
+  REQUESTED
+  PROCESSING
+  COMPLETED
+  REJECTED
+  CANCELLED
+}
+
+enum PayoutMethod {
+  BANK_WIRE
+  SWIFT
+  ACH
+  STRIPE
+  PAYPAL
+}
+
+enum LedgerTransactionType {
+  ORDER_COMMISSION
+  SUBSCRIPTION_FEE
+  PAYOUT_DISBURSEMENT
+  ORDER_ESCROW_HOLD
+  ORDER_ESCROW_RELEASE
+  REFUND
+}
+
+model User {
+  id                String         @id @default(uuid())
+  email             String         @unique
+  passwordHash      String
+  firstName         String
+  lastName          String
+  phone             String?
+  role              Role           @default(BUYER)
+  isActive          Boolean        @default(true)
+  isEmailVerified   Boolean        @default(false)
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  sellerProfile     SellerProfile?
+  addresses         Address[]
+  orders            Order[]        @relation("BuyerOrders")
+  rfqs              Rfq[]          @relation("BuyerRfqs")
+  cart              Cart?
+  reviews           Review[]       @relation("BuyerReviews")
+
+  @@map("users")
+}
+
+model Address {
+  id                String         @id @default(uuid())
+  userId            String
+  companyName       String?
+  contactPerson     String
+  phone             String
+  addressLine1      String
+  addressLine2      String?
+  city              String
+  state             String
+  postalCode        String
+  country           String
+  isDefaultShipping Boolean        @default(false)
+  isDefaultBilling  Boolean        @default(false)
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("addresses")
+}
+
+model SellerProfile {
+  id                     String             @id @default(uuid())
+  userId                 String             @unique
+  companyName            String
+  storeSlug              String             @unique
+  businessType           String
+  yearEstablished        Int?
+  totalEmployees         String?
+  registeredCapital      String?
+  annualRevenue          String?
+  operationalAddress     String
+  city                   String
+  state                  String
+  country                String
+  website                String?
+  logoUrl                String?
+  bannerUrl              String?
+  businessDescription    String             @db.Text
+  verificationStatus     VerificationStatus @default(PENDING)
+  rejectionReason        String?
+  verifiedAt             DateTime?
+  currentTier            MembershipTier     @default(FREE)
+  subscriptionExpiresAt  DateTime?
+  onboardingStep         Int                @default(1)
+  isOnboardingComplete   Boolean            @default(false)
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
+
+  user                   User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  factoryDetail          FactoryDetail?
+  documents              SellerDocument[]
+  subscriptions          Subscription[]
+  products               Product[]
+  orders                 Order[]            @relation("SellerOrders")
+  quotes                 Quote[]
+  reviews                Review[]           @relation("SellerReviews")
+  reviewReplies          ReviewReply[]
+  payoutRequests         PayoutRequest[]
+
+  @@map("seller_profiles")
+}
+
+model FactoryDetail {
+  id                   String         @id @default(uuid())
+  sellerProfileId      String         @unique
+  factorySizeSqMeters  Float?
+  productionLinesCount Int            @default(1)
+  annualOutputValue    String?
+  mainEquipment        String?        @db.Text
+  rdStaffCount         Int            @default(0)
+  qcStaffCount         Int            @default(0)
+  oemExperienceYears   Int            @default(0)
+  leadTimeDaysAvg      Int            @default(15)
+  factoryAddress       String?
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+
+  sellerProfile        SellerProfile  @relation(fields: [sellerProfileId], references: [id], onDelete: Cascade)
+
+  @@map("factory_details")
+}
+
+model SellerDocument {
+  id                   String         @id @default(uuid())
+  sellerProfileId      String
+  documentType         DocumentType
+  documentName         String
+  documentNumber       String?
+  fileUrl              String
+  issueDate            DateTime?
+  expiryDate           DateTime?
+  isAudited            Boolean        @default(false)
+  auditNotes           String?
+  verifiedAt           DateTime?
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+
+  sellerProfile        SellerProfile  @relation(fields: [sellerProfileId], references: [id], onDelete: Cascade)
+
+  @@map("seller_documents")
+}
+
+model SubscriptionPlan {
+  id                   String             @id @default(uuid())
+  tier                 MembershipTier     @unique
+  name                 String
+  priceMonthly         Decimal            @db.Decimal(10, 2)
+  priceAnnually        Decimal?           @db.Decimal(10, 2)
+  maxProducts          Int                @default(50)
+  maxMonthlyQuotes     Int                @default(20)
+  verifiedBadge        Boolean            @default(false)
+  priorityRanking      Boolean            @default(false)
+  dedicatedSupport     Boolean            @default(false)
+  description          String?
+  features             Json?
+  isActive             Boolean            @default(true)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  subscriptions        Subscription[]
+
+  @@map("subscription_plans")
+}
+
+model Subscription {
+  id                   String             @id @default(uuid())
+  sellerProfileId      String
+  planId               String
+  status               SubscriptionStatus @default(ACTIVE)
+  currentPeriodStart   DateTime           @default(now())
+  currentPeriodEnd     DateTime
+  cancelAtPeriodEnd    Boolean            @default(false)
+  paymentReference     String?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  sellerProfile        SellerProfile      @relation(fields: [sellerProfileId], references: [id], onDelete: Cascade)
+  plan                 SubscriptionPlan   @relation(fields: [planId], references: [id])
+
+  @@map("subscriptions")
+}
+
+model Category {
+  id                   String              @id @default(uuid())
+  parentId             String?
+  name                 String
+  slug                 String              @unique
+  description          String?
+  iconUrl              String?
+  imageUrl             String?
+  level                Int                 @default(1)
+  sortOrder            Int                 @default(0)
+  isActive             Boolean             @default(true)
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+
+  parent               Category?           @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: Restrict)
+  children             Category[]          @relation("CategoryHierarchy")
+  attributes           CategoryAttribute[]
+  products             Product[]
+  rfqs                 Rfq[]
+  commissionSettings   CommissionSetting[]
+
+  @@map("categories")
+}
+
+model CategoryAttribute {
+  id                   String         @id @default(uuid())
+  categoryId           String
+  name                 String
+  type                 String         @default("TEXT")
+  isRequired           Boolean        @default(false)
+  options              Json?
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+
+  category             Category       @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@map("category_attributes")
+}
+
+model Product {
+  id                   String                 @id @default(uuid())
+  sellerProfileId      String
+  categoryId           String
+  title                String
+  slug                 String                 @unique
+  sku                  String?
+  description          String                 @db.Text
+  moq                  Int                    @default(1)
+  samplePrice          Decimal?               @db.Decimal(10, 2)
+  leadTimeDays         Int                    @default(14)
+  originCountry        String
+  portOfDispatch       String?
+  packagingDetails     String?                @db.Text
+  isCustomizable       Boolean                @default(false)
+  isActive             Boolean                @default(true)
+  viewsCount           Int                    @default(0)
+  ordersCount          Int                    @default(0)
+  ratingAvg            Decimal                @default(0.0) @db.Decimal(3, 2)
+  ratingCount          Int                    @default(0)
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+
+  sellerProfile        SellerProfile          @relation(fields: [sellerProfileId], references: [id], onDelete: Cascade)
+  category             Category               @relation(fields: [categoryId], references: [id])
+  images               ProductImage[]
+  tieredPrices         TieredPrice[]
+  customizations       ProductCustomization[]
+  cartItems            CartItem[]
+  orderItems           OrderItem[]
+  reviews              Review[]
+
+  @@map("products")
+}
+
+model ProductImage {
+  id                   String         @id @default(uuid())
+  productId            String
+  url                  String
+  isThumbnail          Boolean        @default(false)
+  sortOrder            Int            @default(0)
+  createdAt            DateTime       @default(now())
+
+  product              Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("product_images")
+}
+
+model TieredPrice {
+  id                   String         @id @default(uuid())
+  productId            String
+  minQuantity          Int
+  maxQuantity          Int?
+  unitPrice            Decimal        @db.Decimal(10, 2)
+  createdAt            DateTime       @default(now())
+
+  product              Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("tiered_prices")
+}
+
+model ProductCustomization {
+  id                   String            @id @default(uuid())
+  productId            String
+  customizationType    CustomizationType
+  minMoq               Int               @default(100)
+  extraCostPerUnit     Decimal           @default(0.00) @db.Decimal(10, 2)
+  description          String?
+  createdAt            DateTime          @default(now())
+
+  product              Product           @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("product_customizations")
+}
+
+model Cart {
+  id                   String         @id @default(uuid())
+  buyerId              String         @unique
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+
+  buyer                User           @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+  items                CartItem[]
+
+  @@map("carts")
+}
+
+model CartItem {
+  id                   String         @id @default(uuid())
+  cartId               String
+  productId            String
+  quantity             Int
+  unitPrice            Decimal        @db.Decimal(10, 2)
+  customizationNotes   String?
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+
+  cart                 Cart           @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product              Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("cart_items")
+}
+
+model Order {
+  id                   String               @id @default(uuid())
+  orderNumber          String               @unique
+  buyerId              String
+  sellerProfileId      String
+  totalAmount          Decimal              @db.Decimal(12, 2)
+  commissionRate       Decimal              @default(5.00) @db.Decimal(5, 2)
+  commissionAmount     Decimal              @default(0.00) @db.Decimal(12, 2)
+  sellerNetAmount      Decimal              @default(0.00) @db.Decimal(12, 2)
+  paymentStatus        PaymentStatus        @default(PENDING)
+  orderStatus          OrderStatus          @default(PENDING_PAYMENT)
+  incoterm             Incoterm             @default(FOB)
+  destinationPort      String?
+  shippingAddress      Json
+  notes                String?              @db.Text
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+
+  buyer                User                 @relation("BuyerOrders", fields: [buyerId], references: [id], onDelete: Restrict)
+  sellerProfile        SellerProfile        @relation("SellerOrders", fields: [sellerProfileId], references: [id], onDelete: Restrict)
+  items                OrderItem[]
+  statusHistory        OrderStatusHistory[]
+  reviews              Review[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id                   String         @id @default(uuid())
+  orderId              String
+  productId            String
+  productTitle         String
+  productSku           String?
+  quantity             Int
+  unitPrice            Decimal        @db.Decimal(10, 2)
+  subtotal             Decimal        @db.Decimal(12, 2)
+  customizationDetails Json?
+  createdAt            DateTime       @default(now())
+
+  order                Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product              Product        @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@map("order_items")
+}
+
+model OrderStatusHistory {
+  id                   String         @id @default(uuid())
+  orderId              String
+  previousStatus       OrderStatus?
+  newStatus            OrderStatus
+  note                 String?
+  updatedByUserId      String
+  createdAt            DateTime       @default(now())
+
+  order                Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("order_status_history")
+}
+
+model Rfq {
+  id                   String          @id @default(uuid())
+  rfqNumber            String          @unique
+  buyerId              String
+  categoryId           String
+  title                String
+  description          String          @db.Text
+  targetQuantity       Int
+  targetUnitPrice      Decimal?        @db.Decimal(10, 2)
+  incoterm             Incoterm        @default(FOB)
+  destinationPort      String?
+  targetDeliveryDate   DateTime?
+  status               RfqStatus       @default(OPEN)
+  expiryDate           DateTime
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+
+  buyer                User            @relation("BuyerRfqs", fields: [buyerId], references: [id], onDelete: Cascade)
+  category             Category        @relation(fields: [categoryId], references: [id])
+  attachments          RfqAttachment[]
+  quotes               Quote[]
+
+  @@map("rfqs")
+}
+
+model RfqAttachment {
+  id                   String         @id @default(uuid())
+  rfqId                String
+  fileName             String
+  fileUrl              String
+  fileType             String?
+  fileSizeBytes        Int?
+  createdAt            DateTime       @default(now())
+
+  rfq                  Rfq            @relation(fields: [rfqId], references: [id], onDelete: Cascade)
+
+  @@map("rfq_attachments")
+}
+
+model Quote {
+  id                   String         @id @default(uuid())
+  quoteNumber          String         @unique
+  rfqId                String
+  sellerProfileId      String
+  unitPrice            Decimal        @db.Decimal(10, 2)
+  totalAmount          Decimal        @db.Decimal(12, 2)
+  moqOffered           Int
+  sampleLeadDays       Int?
+  productionLeadDays   Int
+  incotermOffered      Incoterm       @default(FOB)
+  shippingPort         String?
+  paymentTerms         String?
+  validUntil           DateTime
+  status               QuoteStatus    @default(SUBMITTED)
+  sellerNotes          String?        @db.Text
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+
+  rfq                  Rfq            @relation(fields: [rfqId], references: [id], onDelete: Cascade)
+  sellerProfile        SellerProfile  @relation(fields: [sellerProfileId], references: [id], onDelete: Cascade)
+  items                QuoteItem[]
+
+  @@map("quotes")
+}
+
+model QuoteItem {
+  id                   String         @id @default(uuid())
+  quoteId              String
+  description          String
+  quantity             Int
+  unitPrice            Decimal        @db.Decimal(10, 2)
+  subtotal             Decimal        @db.Decimal(12, 2)
+
+  quote                Quote          @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+
+  @@map("quote_items")
+}
+
+model Review {
+  id                   String         @id @default(uuid())
+  orderId              String
+  productId            String
+  sellerProfileId      String
+  buyerId              String
+  productRating        Int
+  supplierRating       Int
+  communicationRating  Int
+  punctualityRating    Int
+  comment              String         @db.Text
+  mediaUrls            Json?
+  isVerifiedPurchase   Boolean        @default(true)
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+
+  order                Order          @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  product              Product        @relation(fields: [productId], references: [id], onDelete: Restrict)
+  sellerProfile        SellerProfile  @relation("SellerReviews", fields: [sellerProfileId], references: [id], onDelete: Restrict)
+  buyer                User           @relation("BuyerReviews", fields: [buyerId], references: [id], onDelete: Restrict)
+  reply                ReviewReply?
+
+  @@map("reviews")
+}
+
+model ReviewReply {
+  id                   String         @id @default(uuid())
+  reviewId             String         @unique
+  sellerProfileId      String
+  replyText            String         @db.Text
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+
+  review               Review         @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  sellerProfile        SellerProfile  @relation(fields: [sellerProfileId], references: [id], onDelete: Cascade)
+
+  @@map("review_replies")
+}
+
+model PayoutRequest {
+  id                   String         @id @default(uuid())
+  sellerProfileId      String
+  amount               Decimal        @db.Decimal(12, 2)
+  currency             String         @default("USD")
+  payoutMethod         PayoutMethod   @default(BANK_WIRE)
+  payoutAccountDetails Json
+  status               PayoutStatus   @default(REQUESTED)
+  transactionReference String?
+  adminNote            String?
+  requestedAt          DateTime       @default(now())
+  processedAt          DateTime?
+
+  sellerProfile        SellerProfile  @relation(fields: [sellerProfileId], references: [id], onDelete: Restrict)
+
+  @@map("payout_requests")
+}
+
+model FinancialLedger {
+  id                   String                @id @default(uuid())
+  transactionType      LedgerTransactionType
+  amount               Decimal               @db.Decimal(12, 2)
+  currency             String                @default("USD")
+  referenceType        String
+  referenceId          String
+  balanceAfter         Decimal               @db.Decimal(12, 2)
+  note                 String?
+  createdAt            DateTime              @default(now())
+
+  @@map("financial_ledgers")
+}
+
+model CommissionSetting {
+  id                    String          @id @default(uuid())
+  categoryId            String?
+  sellerTier            MembershipTier?
+  commissionRatePercent Decimal         @default(5.00) @db.Decimal(5, 2)
+  isActive              Boolean         @default(true)
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+
+  category              Category?       @relation(fields: [categoryId], references: [id])
+
+  @@map("commission_settings")
 }
 
 datasource db {
