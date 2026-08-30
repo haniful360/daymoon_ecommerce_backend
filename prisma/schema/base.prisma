@@ -1,6 +1,7 @@
 // Base Prisma configuration & shared enums
 
 generator client {
+  
   provider = "prisma-client-js"
 }
 
