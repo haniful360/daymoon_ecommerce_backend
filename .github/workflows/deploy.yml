@@ -7,7 +7,7 @@ on:
   pull_request:
     branches:
       - main
-  workflow_dispatch: # Allows manual trigger from GitHub Actions UI
+  workflow_dispatch: # GitHub Actions UI থেকে ম্যানুয়ালি রান করার সুবিধা
 
 env:
   REGISTRY: ghcr.io
@@ -15,7 +15,7 @@ env:
 
 jobs:
   # =================================================================
-  # Job 1: Code Quality, Prisma Validation, Tests, and Build Check
+  # Job 1: কোড কোয়ালিটি, প্রিজমা ভ্যালিডেশন, টেস্ট এবং বিল্ড চেক
   # =================================================================
   test-and-lint:
     name: 🧪 Test & Lint
@@ -52,7 +52,7 @@ jobs:
         run: pnpm build
 
   # =================================================================
-  # Job 2: Build Multi-stage Docker Image and Push to GitHub Registry
+  # Job 2: ডকার ইমেজ বিল্ড ও GitHub Container Registry-তে পুশ
   # =================================================================
   build-and-push-docker:
     name: 🐳 Build & Push Docker Image
@@ -100,7 +100,7 @@ jobs:
           cache-to: type=gha,mode=max
 
   # =================================================================
-  # Job 3: Automated Live Server Deployment via SSH
+  # Job 3: লাইভ সার্ভারে (VPS) স্বয়ংক্রিয় ডেপ্লয়মেন্ট ও জিরো-ডাউনটাইম রিস্টার্ট
   # =================================================================
   deploy-to-server:
     name: 🚀 Deploy to Live Server
