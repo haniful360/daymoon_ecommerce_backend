@@ -1,0 +1,140 @@
+name: Daymoon B2B Backend CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch: # Allows manual trigger from GitHub Actions UI
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # =================================================================
+  # Job 1: Code Quality, Prisma Validation, Tests, and Build Check
+  # =================================================================
+  test-and-lint:
+    name: 🧪 Test & Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: latest
+
+      - name: 🟢 Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: 📥 Install Dependencies
+        run: pnpm install --frozen-lockfile || pnpm install
+
+      - name: 🔍 Validate Prisma Multi-File Schema
+        run: pnpm exec prisma validate
+
+      - name: ⚙️ Generate Prisma Client
+        run: pnpm exec prisma generate
+
+      - name: 🧪 Run Unit Tests
+        run: pnpm test
+
+      - name: 🏗️ Build TypeScript Project
+        run: pnpm build
+
+  # =================================================================
+  # Job 2: Build Multi-stage Docker Image and Push to GitHub Registry
+  # =================================================================
+  build-and-push-docker:
+    name: 🐳 Build & Push Docker Image
+    needs: test-and-lint
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: 🔐 Log in to GitHub Container Registry (GHCR)
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 🏷️ Extract Docker Metadata (tags & labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest
+            type=sha,format=short
+            type=ref,event=branch
+
+      - name: 🚀 Build and Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # =================================================================
+  # Job 3: Automated Live Server Deployment via SSH
+  # =================================================================
+  deploy-to-server:
+    name: 🚀 Deploy to Live Server
+    needs: build-and-push-docker
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🔑 Execute Deployment Script via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ secrets.SERVER_PORT || 22 }}
+          script: |
+            echo "🚀 Starting deployment on live server..."
+            
+            # Navigate to project directory on server
+            cd /home/${{ secrets.SERVER_USERNAME }}/daymoon_ecommerce_backend || cd ~/daymoon_ecommerce_backend
+            
+            # Login to GitHub Container Registry
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            
+            # Pull latest production Docker image
+            echo "📥 Pulling latest Docker image..."
+            docker compose pull backend
+            
+            # Restart backend with zero downtime
+            echo "🔄 Restarting backend service..."
+            docker compose up -d backend
+            
+            # Clean up old unused images to save disk space
+            echo "🧹 Cleaning up dangling Docker images..."
+            docker image prune -f
+            
+            echo "🎉 Deployment completed successfully!"
