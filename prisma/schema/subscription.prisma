@@ -1,0 +1,56 @@
+// Subscription Plans & Memberships
+
+enum MembershipTier {
+  FREE
+  BASIC
+  STANDARD
+  PREMIUM
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+  EXPIRED
+}
+
+model SubscriptionPlan {
+  id               String         @id @default(uuid())
+  tier             MembershipTier @unique
+  name             String
+  priceMonthly     Decimal        @db.Decimal(10, 2)
+  priceAnnually    Decimal?       @db.Decimal(10, 2)
+  maxProducts      Int            @default(50)
+  maxMonthlyQuotes Int            @default(20)
+  verifiedBadge    Boolean        @default(false)
+  priorityRanking  Boolean        @default(false)
+  dedicatedSupport Boolean        @default(false)
+  description      String?
+  features         Json?
+  isActive         Boolean        @default(true)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  subscriptions    Subscription[]
+
+  @@map("subscription_plans")
+}
+
+model Subscription {
+  id                 String             @id @default(uuid())
+  sellerProfileId    String
+  planId             String
+  status             SubscriptionStatus @default(ACTIVE)
+  currentPeriodStart DateTime           @default(now())
+  currentPeriodEnd   DateTime
+  cancelAtPeriodEnd  Boolean            @default(false)
+  paymentReference   String?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  sellerProfile      SellerProfile      @relation(fields: [sellerProfileId], references: [id], onDelete: Cascade)
+  plan               SubscriptionPlan   @relation(fields: [planId], references: [id])
+
+  @@map("subscriptions")
+}
+

@@ -1,0 +1,55 @@
+// Categories, Category Attributes & Commission Settings
+
+model Category {
+  id                 String              @id @default(uuid())
+  parentId           String?
+  name               String
+  slug               String              @unique
+  description        String?
+  iconUrl            String?
+  imageUrl           String?
+  level              Int                 @default(1)
+  sortOrder          Int                 @default(0)
+  isActive           Boolean             @default(true)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  parent             Category?           @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: Restrict)
+  children           Category[]          @relation("CategoryHierarchy")
+  attributes         CategoryAttribute[]
+  products           Product[]
+  rfqs               Rfq[]
+  commissionSettings CommissionSetting[]
+
+  @@map("categories")
+}
+
+model CategoryAttribute {
+  id         String   @id @default(uuid())
+  categoryId String
+  name       String
+  type       String   @default("TEXT")
+  isRequired Boolean  @default(false)
+  options    Json?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@map("category_attributes")
+}
+
+model CommissionSetting {
+  id                    String          @id @default(uuid())
+  categoryId            String?
+  sellerTier            MembershipTier?
+  commissionRatePercent Decimal         @default(5.00) @db.Decimal(5, 2)
+  isActive              Boolean         @default(true)
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
+
+  category              Category?       @relation(fields: [categoryId], references: [id])
+
+  @@map("commission_settings")
+}
+

@@ -1,0 +1,41 @@
+// Product & Factory Reviews and Replies
+
+model Review {
+  id                  String        @id @default(uuid())
+  orderId             String
+  productId           String
+  sellerProfileId     String
+  buyerId             String
+  productRating       Int
+  supplierRating      Int
+  communicationRating Int
+  punctualityRating   Int
+  comment             String        @db.Text
+  mediaUrls           Json?
+  isVerifiedPurchase  Boolean       @default(true)
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  order               Order         @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  product             Product       @relation(fields: [productId], references: [id], onDelete: Restrict)
+  sellerProfile       SellerProfile @relation("SellerReviews", fields: [sellerProfileId], references: [id], onDelete: Restrict)
+  buyer               User          @relation("BuyerReviews", fields: [buyerId], references: [id], onDelete: Restrict)
+  reply               ReviewReply?
+
+  @@map("reviews")
+}
+
+model ReviewReply {
+  id              String        @id @default(uuid())
+  reviewId        String        @unique
+  sellerProfileId String
+  replyText       String        @db.Text
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  review          Review        @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  sellerProfile   SellerProfile @relation(fields: [sellerProfileId], references: [id], onDelete: Cascade)
+
+  @@map("review_replies")
+}
+

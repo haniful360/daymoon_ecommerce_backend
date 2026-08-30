@@ -1,0 +1,47 @@
+// User and Address Models
+
+model User {
+  id              String         @id @default(uuid())
+  email           String         @unique
+  passwordHash    String
+  firstName       String
+  lastName        String
+  phone           String?
+  role            Role           @default(BUYER)
+  isActive        Boolean        @default(true)
+  isEmailVerified Boolean        @default(false)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  sellerProfile   SellerProfile?
+  addresses       Address[]
+  orders          Order[]        @relation("BuyerOrders")
+  rfqs            Rfq[]          @relation("BuyerRfqs")
+  cart            Cart?
+  reviews         Review[]       @relation("BuyerReviews")
+
+  @@map("users")
+}
+
+model Address {
+  id                String   @id @default(uuid())
+  userId            String
+  companyName       String?
+  contactPerson     String
+  phone             String
+  addressLine1      String
+  addressLine2      String?
+  city              String
+  state             String
+  postalCode        String
+  country           String
+  isDefaultShipping Boolean  @default(false)
+  isDefaultBilling  Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("addresses")
+}
+

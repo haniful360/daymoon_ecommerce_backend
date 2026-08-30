@@ -1,0 +1,59 @@
+// Payouts & Financial Ledger Models
+
+enum PayoutStatus {
+  REQUESTED
+  PROCESSING
+  COMPLETED
+  REJECTED
+  CANCELLED
+}
+
+enum PayoutMethod {
+  BANK_WIRE
+  SWIFT
+  ACH
+  STRIPE
+  PAYPAL
+}
+
+enum LedgerTransactionType {
+  ORDER_COMMISSION
+  SUBSCRIPTION_FEE
+  PAYOUT_DISBURSEMENT
+  ORDER_ESCROW_HOLD
+  ORDER_ESCROW_RELEASE
+  REFUND
+}
+
+model PayoutRequest {
+  id                   String        @id @default(uuid())
+  sellerProfileId      String
+  amount               Decimal       @db.Decimal(12, 2)
+  currency             String        @default("USD")
+  payoutMethod         PayoutMethod  @default(BANK_WIRE)
+  payoutAccountDetails Json
+  status               PayoutStatus  @default(REQUESTED)
+  transactionReference String?
+  adminNote            String?
+  requestedAt          DateTime      @default(now())
+  processedAt          DateTime?
+
+  sellerProfile        SellerProfile @relation(fields: [sellerProfileId], references: [id], onDelete: Restrict)
+
+  @@map("payout_requests")
+}
+
+model FinancialLedger {
+  id              String                @id @default(uuid())
+  transactionType LedgerTransactionType
+  amount          Decimal               @db.Decimal(12, 2)
+  currency        String                @default("USD")
+  referenceType   String
+  referenceId     String
+  balanceAfter    Decimal               @db.Decimal(12, 2)
+  note            String?
+  createdAt       DateTime              @default(now())
+
+  @@map("financial_ledgers")
+}
+

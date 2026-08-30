@@ -3,7 +3,10 @@ import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter, PrismaExceptionFilter } from './common/filters';
-import { LoggingInterceptor, TransformInterceptor } from './common/interceptors';
+import {
+  LoggingInterceptor,
+  TransformInterceptor,
+} from './common/interceptors';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
@@ -33,7 +36,10 @@ async function bootstrap() {
 
   // Global Filters & Interceptors
   app.useGlobalFilters(new HttpExceptionFilter(), new PrismaExceptionFilter());
-  app.useGlobalInterceptors(new LoggingInterceptor(), new TransformInterceptor());
+  app.useGlobalInterceptors(
+    new LoggingInterceptor(),
+    new TransformInterceptor(),
+  );
 
   // Swagger OpenAPI Documentation Setup
   const config = new DocumentBuilder()
@@ -47,16 +53,40 @@ async function bootstrap() {
     .addBearerAuth()
     .addTag('Authentication', 'User registration, login, JWT token refresh')
     .addTag('Users', 'User profiles and address book')
-    .addTag('Sellers & Factory Sourcing', '5-step supplier onboarding wizard and storefront profiles')
-    .addTag('Subscriptions & Membership Tiers', 'Supplier membership tiers and recurring billing')
+    .addTag(
+      'Sellers & Factory Sourcing',
+      '5-step supplier onboarding wizard and storefront profiles',
+    )
+    .addTag(
+      'Subscriptions & Membership Tiers',
+      'Supplier membership tiers and recurring billing',
+    )
     .addTag('Categories', 'Hierarchical category tree and technical attributes')
-    .addTag('Products & Wholesale Catalog', 'Wholesale catalog with tiered pricing, MOQ, and OEM customization')
-    .addTag('Cart & Bulk Wholesale Orders', 'Bulk shopping cart and MOQ tier calculation')
-    .addTag('Orders & Trade Assurance', 'Multi-vendor order split, milestone tracking & escrow')
-    .addTag('RFQs (Request for Quotations) & Sourcing', 'Buyer RFQ requests and supplier quotations')
+    .addTag(
+      'Products & Wholesale Catalog',
+      'Wholesale catalog with tiered pricing, MOQ, and OEM customization',
+    )
+    .addTag(
+      'Cart & Bulk Wholesale Orders',
+      'Bulk shopping cart and MOQ tier calculation',
+    )
+    .addTag(
+      'Orders & Trade Assurance',
+      'Multi-vendor order split, milestone tracking & escrow',
+    )
+    .addTag(
+      'RFQs (Request for Quotations) & Sourcing',
+      'Buyer RFQ requests and supplier quotations',
+    )
     .addTag('Reviews & Ratings', 'Audited buyer reviews and supplier responses')
-    .addTag('Payouts & Supplier Balance', 'Supplier balance withdrawals and payout management')
-    .addTag('Super Admin & Financial Ledgers', 'Supplier KYC auditing, financial ledgers, and platform commissions')
+    .addTag(
+      'Payouts & Supplier Balance',
+      'Supplier balance withdrawals and payout management',
+    )
+    .addTag(
+      'Super Admin & Financial Ledgers',
+      'Supplier KYC auditing, financial ledgers, and platform commissions',
+    )
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
@@ -66,9 +96,17 @@ async function bootstrap() {
     },
   });
 
-  const port = process.env.PORT ?? 3000;
+  const port = process.env.PORT ?? 5000;
   await app.listen(port);
-  logger.log(`Daymoon B2B Backend server is running on: http://localhost:${port}/api/v1`);
-  logger.log(`Swagger OpenAPI Documentation available at: http://localhost:${port}/docs`);
+  logger.log(
+    `Daymoon B2B Backend server is running on: http://localhost:${port}/api/v1`,
+  );
+  logger.log(
+    `Swagger OpenAPI Documentation available at: http://localhost:${port}/docs`,
+  );
 }
-bootstrap();
+
+bootstrap().catch((err) => {
+  console.error('Fatal error during bootstrap:', err);
+  process.exit(1);
+});
