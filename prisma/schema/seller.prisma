@@ -1,23 +1,5 @@
 // Seller, Factory and Verification Documents Models
 
-enum VerificationStatus {
-  PENDING
-  UNDER_REVIEW
-  APPROVED
-  REJECTED
-}
-
-enum DocumentType {
-  BUSINESS_LICENSE
-  TAX_CERTIFICATE
-  FACTORY_INSPECTION
-  ISO_CERTIFICATE
-  CE_CERTIFICATE
-  BANK_STATEMENT
-  EXPORT_LICENSE
-  OTHER
-}
-
 model SellerProfile {
   id                    String             @id @default(uuid())
   userId                String             @unique
@@ -99,4 +81,3 @@ model SellerDocument {
 
   @@map("seller_documents")
 }
-

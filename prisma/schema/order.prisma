@@ -1,24 +1,5 @@
 // Orders, Order Items, and Milestone Production Tracking
 
-enum OrderStatus {
-  PENDING_PAYMENT
-  CONFIRMED
-  IN_PRODUCTION
-  QA_INSPECTION
-  READY_FOR_DISPATCH
-  SHIPPED
-  DELIVERED
-  CANCELLED
-  REFUNDED
-}
-
-enum PaymentStatus {
-  PENDING
-  PAID
-  FAILED
-  REFUNDED
-}
-
 model Order {
   id               String               @id @default(uuid())
   orderNumber      String               @unique
@@ -77,4 +58,3 @@ model OrderStatusHistory {
 
   @@map("order_status_history")
 }
-

@@ -1,30 +1,5 @@
 // Payouts & Financial Ledger Models
 
-enum PayoutStatus {
-  REQUESTED
-  PROCESSING
-  COMPLETED
-  REJECTED
-  CANCELLED
-}
-
-enum PayoutMethod {
-  BANK_WIRE
-  SWIFT
-  ACH
-  STRIPE
-  PAYPAL
-}
-
-enum LedgerTransactionType {
-  ORDER_COMMISSION
-  SUBSCRIPTION_FEE
-  PAYOUT_DISBURSEMENT
-  ORDER_ESCROW_HOLD
-  ORDER_ESCROW_RELEASE
-  REFUND
-}
-
 model PayoutRequest {
   id                   String        @id @default(uuid())
   sellerProfileId      String
@@ -56,4 +31,3 @@ model FinancialLedger {
 
   @@map("financial_ledgers")
 }
-

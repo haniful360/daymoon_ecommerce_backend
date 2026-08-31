@@ -1,19 +1,5 @@
 // Subscription Plans & Memberships
 
-enum MembershipTier {
-  FREE
-  BASIC
-  STANDARD
-  PREMIUM
-}
-
-enum SubscriptionStatus {
-  ACTIVE
-  PAST_DUE
-  CANCELLED
-  EXPIRED
-}
-
 model SubscriptionPlan {
   id               String         @id @default(uuid())
   tier             MembershipTier @unique
@@ -53,4 +39,3 @@ model Subscription {
 
   @@map("subscriptions")
 }
-

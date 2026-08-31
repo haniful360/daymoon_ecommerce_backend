@@ -1,0 +1,119 @@
+// Centralized B2B Marketplace & Factory Sourcing Enums
+
+enum Role {
+  BUYER
+  SELLER
+  SUPER_ADMIN
+}
+
+enum Incoterm {
+  FOB
+  CIF
+  EXW
+  DDP
+  DAP
+  CFR
+  FCA
+}
+
+enum VerificationStatus {
+  PENDING
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+}
+
+enum DocumentType {
+  BUSINESS_LICENSE
+  TAX_CERTIFICATE
+  FACTORY_INSPECTION
+  ISO_CERTIFICATE
+  CE_CERTIFICATE
+  BANK_STATEMENT
+  EXPORT_LICENSE
+  OTHER
+}
+
+enum MembershipTier {
+  FREE
+  BASIC
+  STANDARD
+  PREMIUM
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+  EXPIRED
+}
+
+enum CustomizationType {
+  CUSTOM_LOGO
+  CUSTOM_PACKAGING
+  GRAPHIC_CUSTOMIZATION
+  OEM_FULL_DESIGN
+}
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  CONFIRMED
+  IN_PRODUCTION
+  QA_INSPECTION
+  READY_FOR_DISPATCH
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum RfqStatus {
+  OPEN
+  UNDER_REVIEW
+  QUOTED
+  ACCEPTED
+  REJECTED
+  EXPIRED
+  CLOSED
+}
+
+enum QuoteStatus {
+  DRAFT
+  SUBMITTED
+  ACCEPTED
+  REJECTED
+  EXPIRED
+}
+
+enum PayoutStatus {
+  REQUESTED
+  PROCESSING
+  COMPLETED
+  REJECTED
+  CANCELLED
+}
+
+enum PayoutMethod {
+  BANK_WIRE
+  SWIFT
+  ACH
+  STRIPE
+  PAYPAL
+}
+
+enum LedgerTransactionType {
+  ORDER_COMMISSION
+  SUBSCRIPTION_FEE
+  PAYOUT_DISBURSEMENT
+  ORDER_ESCROW_HOLD
+  ORDER_ESCROW_RELEASE
+  REFUND
+}
+

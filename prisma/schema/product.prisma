@@ -1,12 +1,5 @@
 // Product, Images, Tiered Pricing & OEM Customization
 
-enum CustomizationType {
-  CUSTOM_LOGO
-  CUSTOM_PACKAGING
-  GRAPHIC_CUSTOMIZATION
-  OEM_FULL_DESIGN
-}
-
 model Product {
   id               String                 @id @default(uuid())
   sellerProfileId  String
@@ -81,4 +74,3 @@ model ProductCustomization {
 
   @@map("product_customizations")
 }
-

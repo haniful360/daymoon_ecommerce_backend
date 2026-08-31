@@ -1,23 +1,5 @@
 // RFQs (Request for Quotations), Technical Drawings & Factory Quotes
 
-enum RfqStatus {
-  OPEN
-  UNDER_REVIEW
-  QUOTED
-  ACCEPTED
-  REJECTED
-  EXPIRED
-  CLOSED
-}
-
-enum QuoteStatus {
-  DRAFT
-  SUBMITTED
-  ACCEPTED
-  REJECTED
-  EXPIRED
-}
-
 model Rfq {
   id                 String          @id @default(uuid())
   rfqNumber          String          @unique
@@ -95,4 +77,3 @@ model QuoteItem {
 
   @@map("quote_items")
 }
-
