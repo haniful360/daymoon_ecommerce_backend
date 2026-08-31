@@ -45,48 +45,11 @@ async function bootstrap() {
   const config = new DocumentBuilder()
     .setTitle('Daymoon B2B Marketplace & Factory Sourcing API')
     .setDescription(
-      'Enterprise multi-vendor wholesale e-commerce and factory sourcing backend (Alibaba/Global Sources equivalent). ' +
-        'Supports Buyer sourcing, Seller 5-step onboarding & membership tiers (Basic $119.99, Standard $299.99, Premium $599.99), ' +
-        'Tiered Volume Pricing, MOQ, OEM Customizations, RFQs, Quotes, Trade Assurance Orders, and Super Admin Audits.',
+      'Enterprise multi-vendor wholesale e-commerce and factory sourcing backend API documentation.',
     )
     .setVersion('1.0.0')
     .addBearerAuth()
     .addTag('Authentication', 'User registration, login, JWT token refresh')
-    .addTag('Users', 'User profiles and address book')
-    .addTag(
-      'Sellers & Factory Sourcing',
-      '5-step supplier onboarding wizard and storefront profiles',
-    )
-    .addTag(
-      'Subscriptions & Membership Tiers',
-      'Supplier membership tiers and recurring billing',
-    )
-    .addTag('Categories', 'Hierarchical category tree and technical attributes')
-    .addTag(
-      'Products & Wholesale Catalog',
-      'Wholesale catalog with tiered pricing, MOQ, and OEM customization',
-    )
-    .addTag(
-      'Cart & Bulk Wholesale Orders',
-      'Bulk shopping cart and MOQ tier calculation',
-    )
-    .addTag(
-      'Orders & Trade Assurance',
-      'Multi-vendor order split, milestone tracking & escrow',
-    )
-    .addTag(
-      'RFQs (Request for Quotations) & Sourcing',
-      'Buyer RFQ requests and supplier quotations',
-    )
-    .addTag('Reviews & Ratings', 'Audited buyer reviews and supplier responses')
-    .addTag(
-      'Payouts & Supplier Balance',
-      'Supplier balance withdrawals and payout management',
-    )
-    .addTag(
-      'Super Admin & Financial Ledgers',
-      'Supplier KYC auditing, financial ledgers, and platform commissions',
-    )
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
