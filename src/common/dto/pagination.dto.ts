@@ -43,30 +43,22 @@ export class PaginationQueryDto {
 }
 
 export class PaginationMetaDto {
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ example: 100 })
   total: number;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ example: 1 })
   page: number;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ example: 20 })
   limit: number;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ example: 5 })
   totalPages: number;
-
-  @ApiPropertyOptional()
-  hasNextPage: boolean;
-
-  @ApiPropertyOptional()
-  hasPreviousPage: boolean;
 
   constructor(total: number, page: number, limit: number) {
     this.total = total;
     this.page = page;
     this.limit = limit;
-    this.totalPages = Math.ceil(total / limit) || 1;
-    this.hasNextPage = page < this.totalPages;
-    this.hasPreviousPage = page > 1;
+    this.totalPages = limit > 0 ? Math.ceil(total / limit) : 0;
   }
 }

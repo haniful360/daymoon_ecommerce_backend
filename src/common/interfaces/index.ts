@@ -15,12 +15,50 @@ export interface AuthenticatedUser {
   sellerProfileId?: string;
 }
 
+export interface PaginationMeta {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface PaginatedResult<T> {
+  data: T[];
+  meta: PaginationMeta;
+}
+
+export function createPaginatedResponse<T>(
+  data: T[],
+  total: number,
+  page: number,
+  limit: number,
+): PaginatedResult<T> {
+  return {
+    data,
+    meta: {
+      total,
+      page,
+      limit,
+      totalPages: limit > 0 ? Math.ceil(total / limit) : 0,
+    },
+  };
+}
+
 export interface ApiResponse<T = any> {
   success: boolean;
   statusCode: number;
   message?: string;
   data: T;
-  meta?: any;
+  meta?: PaginationMeta;
+  timestamp: string;
+}
+
+export interface ApiErrorResponse {
+  success: false;
+  statusCode: number;
+  message: string;
+  errors?: string[] | Record<string, any> | null;
+  path: string;
   timestamp: string;
 }
 
@@ -30,16 +68,4 @@ export interface PaginationParams {
   search?: string;
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
-}
-
-export interface PaginatedResult<T> {
-  items: T[];
-  meta: {
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-    hasNextPage: boolean;
-    hasPreviousPage: boolean;
-  };
 }
