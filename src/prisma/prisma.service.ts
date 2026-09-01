@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import {
   Injectable,
   OnModuleInit,
@@ -16,9 +15,7 @@ export class PrismaService
   private readonly logger = new Logger(PrismaService.name);
 
   constructor() {
-    const connectionString =
-      process.env.DATABASE_URL ||
-      'postgresql://postgres:postgres@localhost:5433/daymoon_db?schema=public';
+    const connectionString = process.env.DATABASE_URL as string;
     const adapter = new PrismaPg({ connectionString });
     super({ adapter });
   }

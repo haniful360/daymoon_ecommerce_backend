@@ -49,9 +49,9 @@ export class AuthService {
           ? {
               sellerProfile: {
                 create: {
-                  businessName: dto.businessName || `${dto.name}'s Enterprise`,
-                  businessType: dto.businessType || 'Manufacturer & Exporter',
-                  country: dto.country || 'Global',
+                  businessName: dto.businessName ?? `${dto.name}'s Enterprise`,
+                  businessType: dto.businessType ?? 'Manufacturer & Exporter',
+                  country: dto.country ?? 'Global',
                   bankDetails: dto.bankDetails as any,
                   businessDescription: 'Pending seller profile completion.',
                 },
@@ -119,7 +119,7 @@ export class AuthService {
   async refreshToken(token: string) {
     try {
       const payload = this.jwtService.verify<JwtPayload>(token, {
-        secret: this.configService.get<string>('JWT_REFRESH_SECRET') || 'daymoon-refresh-secret',
+        secret: this.configService.get<string>('JWT_REFRESH_SECRET') as string,
       });
 
       const user = await this.prisma.user.findUnique({
@@ -197,12 +197,12 @@ export class AuthService {
 
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(payload, {
-        secret: this.configService.get<string>('JWT_SECRET') || 'daymoon-b2b-secret-jwt-key',
-        expiresIn: '1d',
+        secret: this.configService.get<string>('JWT_SECRET') as string,
+        expiresIn: this.configService.get<string>('JWT_EXPIRES_IN') as any,
       }),
       this.jwtService.signAsync(payload, {
-        secret: this.configService.get<string>('JWT_REFRESH_SECRET') || 'daymoon-refresh-secret',
-        expiresIn: '7d',
+        secret: this.configService.get<string>('JWT_REFRESH_SECRET') as string,
+        expiresIn: this.configService.get<string>('JWT_REFRESH_EXPIRES_IN') as any,
       }),
     ]);
 
