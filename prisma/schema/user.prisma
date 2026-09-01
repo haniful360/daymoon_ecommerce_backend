@@ -1,47 +1,31 @@
-// User and Address Models
+// ============================================================================
+// 2. USERS, AUTHENTICATION & SESSIONS
+// ============================================================================
 
 model User {
-  id              String         @id @default(uuid())
-  email           String         @unique
-  passwordHash    String
-  firstName       String
-  lastName        String
-  phone           String?
-  role            Role           @default(BUYER)
-  isActive        Boolean        @default(true)
-  isEmailVerified Boolean        @default(false)
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
+  id                String          @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name              String          @db.VarChar(255)
+  email             String          @unique @db.VarChar(255)
+  passwordHash      String          @map("password_hash") @db.VarChar(255)
+  role              UserRole        @default(BUYER)
+  phone             String?         @db.VarChar(50)
+  avatarUrl         String?         @map("avatar_url") @db.VarChar(500)
+  status            UserStatus      @default(ACTIVE)
+  twoFactorEnabled  Boolean         @default(false) @map("two_factor_enabled")
+  twoFactorSecret   String?         @map("two_factor_secret") @db.VarChar(255)
+  lastLoginAt       DateTime?       @map("last_login_at") @db.Timestamptz(6)
+  deletedAt         DateTime?       @map("deleted_at") @db.Timestamptz(6)
+  createdAt         DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  sellerProfile   SellerProfile?
-  addresses       Address[]
-  orders          Order[]        @relation("BuyerOrders")
-  rfqs            Rfq[]          @relation("BuyerRfqs")
-  cart            Cart?
-  reviews         Review[]       @relation("BuyerReviews")
+  sellerProfile     SellerProfile?
+  cart              Cart?
+  orders            Order[]         @relation("BuyerOrders")
+  rfqs              Rfq[]           @relation("BuyerRfqs")
+  reviews           Review[]        @relation("BuyerReviews")
+  processedPayouts  PayoutRequest[] @relation("AdminProcessedPayouts")
 
+  @@index([role], map: "idx_users_role")
+  @@index([status], map: "idx_users_status")
   @@map("users")
 }
-
-model Address {
-  id                String   @id @default(uuid())
-  userId            String
-  companyName       String?
-  contactPerson     String
-  phone             String
-  addressLine1      String
-  addressLine2      String?
-  city              String
-  state             String
-  postalCode        String
-  country           String
-  isDefaultShipping Boolean  @default(false)
-  isDefaultBilling  Boolean  @default(false)
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-
-  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("addresses")
-}
-

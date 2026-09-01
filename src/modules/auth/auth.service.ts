@@ -29,6 +29,12 @@ export class AuthService {
       throw new ConflictException('An account with this email already exists');
     }
 
+    if (dto.role === UserRole.SELLER && !dto.bankDetails) {
+      throw new BadRequestException(
+        'Bank details (bankName, accountHolderName, accountNumber, swiftCode) are mandatory for seller registration.',
+      );
+    }
+
     const saltRounds = 10;
     const passwordHash = await bcrypt.hash(dto.password, saltRounds);
 
@@ -36,25 +42,18 @@ export class AuthService {
       data: {
         email: dto.email.toLowerCase(),
         passwordHash,
-        firstName: dto.firstName,
-        lastName: dto.lastName,
+        name: dto.name,
         phone: dto.phone,
-        role: dto.role as any,
+        role: dto.role,
         ...(dto.role === UserRole.SELLER
           ? {
               sellerProfile: {
                 create: {
-                  companyName: dto.companyName || `${dto.firstName}'s Enterprise`,
-                  storeSlug: (dto.companyName || `${dto.firstName}-factory`)
-                    .toLowerCase()
-                    .replace(/[^a-z0-9]+/g, '-')
-                    .replace(/(^-|-$)/g, '') + `-${Date.now().toString().slice(-4)}`,
-                  businessType: 'Manufacturer & Exporter',
-                  operationalAddress: 'Pending Onboarding',
-                  city: 'Pending',
-                  state: 'Pending',
-                  country: 'Pending',
-                  businessDescription: 'Pending seller onboarding completion.',
+                  businessName: dto.businessName || `${dto.name}'s Enterprise`,
+                  businessType: dto.businessType || 'Manufacturer & Exporter',
+                  country: dto.country || 'Global',
+                  bankDetails: dto.bankDetails as any,
+                  businessDescription: 'Pending seller profile completion.',
                 },
               },
             }
@@ -65,14 +64,13 @@ export class AuthService {
       },
     });
 
-    const tokens = await this.generateTokens(user.id, user.email, user.role as any);
+    const tokens = await this.generateTokens(user.id, user.email, user.role);
 
     return {
       user: {
         id: user.id,
         email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
+        name: user.name,
         role: user.role,
         sellerProfileId: user.sellerProfile?.id,
       },
@@ -90,7 +88,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    if (!user.isActive) {
+    if (user.status === 'SUSPENDED') {
       throw new UnauthorizedException('Your account has been suspended. Please contact support.');
     }
 
@@ -99,14 +97,18 @@ export class AuthService {
       throw new UnauthorizedException('Invalid email or password');
     }
 
-    const tokens = await this.generateTokens(user.id, user.email, user.role as any);
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { lastLoginAt: new Date() },
+    });
+
+    const tokens = await this.generateTokens(user.id, user.email, user.role);
 
     return {
       user: {
         id: user.id,
         email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
+        name: user.name,
         role: user.role,
         sellerProfileId: user.sellerProfile?.id,
       },
@@ -125,11 +127,11 @@ export class AuthService {
         include: { sellerProfile: true },
       });
 
-      if (!user || !user.isActive) {
+      if (!user || user.status === 'SUSPENDED') {
         throw new UnauthorizedException('Invalid or expired refresh token');
       }
 
-      return this.generateTokens(user.id, user.email, user.role as any);
+      return this.generateTokens(user.id, user.email, user.role);
     } catch {
       throw new UnauthorizedException('Invalid or expired refresh token');
     }
@@ -161,22 +163,23 @@ export class AuthService {
       select: {
         id: true,
         email: true,
-        firstName: true,
-        lastName: true,
+        name: true,
         phone: true,
         role: true,
-        isActive: true,
-        isEmailVerified: true,
+        status: true,
+        avatarUrl: true,
+        lastLoginAt: true,
         createdAt: true,
         sellerProfile: {
           select: {
             id: true,
-            companyName: true,
-            storeSlug: true,
-            verificationStatus: true,
-            currentTier: true,
-            onboardingStep: true,
-            isOnboardingComplete: true,
+            businessName: true,
+            businessType: true,
+            country: true,
+            bankDetails: true,
+            isVerified: true,
+            averageRating: true,
+            totalReviews: true,
           },
         },
       },

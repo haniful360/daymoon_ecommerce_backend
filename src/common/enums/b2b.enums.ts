@@ -1,86 +1,15 @@
-export enum MembershipTier {
-  FREE = 'FREE',
-  BASIC = 'BASIC',
-  STANDARD = 'STANDARD',
-  PREMIUM = 'PREMIUM',
-}
-
-export const SupplierTier = MembershipTier;
-
-export enum VerificationStatus {
-  PENDING = 'PENDING',
-  UNDER_REVIEW = 'UNDER_REVIEW',
-  APPROVED = 'APPROVED',
-  REJECTED = 'REJECTED',
-}
-
-export enum OrderStatus {
-  PENDING_PAYMENT = 'PENDING_PAYMENT',
-  CONFIRMED = 'CONFIRMED',
-  IN_PRODUCTION = 'IN_PRODUCTION',
-  QA_INSPECTION = 'QA_INSPECTION',
-  READY_FOR_DISPATCH = 'READY_FOR_DISPATCH',
-  SHIPPED = 'SHIPPED',
-  DELIVERED = 'DELIVERED',
-  CANCELLED = 'CANCELLED',
-  REFUNDED = 'REFUNDED',
-}
-
-export enum RfqStatus {
-  OPEN = 'OPEN',
-  UNDER_REVIEW = 'UNDER_REVIEW',
-  QUOTED = 'QUOTED',
-  ACCEPTED = 'ACCEPTED',
-  REJECTED = 'REJECTED',
-  EXPIRED = 'EXPIRED',
-  CLOSED = 'CLOSED',
-}
-
-export enum QuoteStatus {
-  DRAFT = 'DRAFT',
-  SUBMITTED = 'SUBMITTED',
-  ACCEPTED = 'ACCEPTED',
-  REJECTED = 'REJECTED',
-  EXPIRED = 'EXPIRED',
-}
-
-export enum PayoutStatus {
-  REQUESTED = 'REQUESTED',
-  PROCESSING = 'PROCESSING',
-  COMPLETED = 'COMPLETED',
-  REJECTED = 'REJECTED',
-  CANCELLED = 'CANCELLED',
-}
-
-export enum SubscriptionStatus {
-  ACTIVE = 'ACTIVE',
-  PAST_DUE = 'PAST_DUE',
-  CANCELLED = 'CANCELLED',
-  EXPIRED = 'EXPIRED',
-}
-
-export enum Incoterm {
-  FOB = 'FOB',
-  CIF = 'CIF',
-  EXW = 'EXW',
-  DDP = 'DDP',
-  DAP = 'DAP',
-  CFR = 'CFR',
-  FCA = 'FCA',
-}
-
-export enum CustomizationType {
-  CUSTOM_LOGO = 'CUSTOM_LOGO',
-  CUSTOM_PACKAGING = 'CUSTOM_PACKAGING',
-  GRAPHIC_CUSTOMIZATION = 'GRAPHIC_CUSTOMIZATION',
-  OEM_FULL_DESIGN = 'OEM_FULL_DESIGN',
-}
-
-export enum LedgerTransactionType {
-  ORDER_COMMISSION = 'ORDER_COMMISSION',
-  SUBSCRIPTION_FEE = 'SUBSCRIPTION_FEE',
-  PAYOUT_DISBURSEMENT = 'PAYOUT_DISBURSEMENT',
-  ORDER_ESCROW_HOLD = 'ORDER_ESCROW_HOLD',
-  ORDER_ESCROW_RELEASE = 'ORDER_ESCROW_RELEASE',
-  REFUND = 'REFUND',
-}
+export {
+  UserRole,
+  UserStatus,
+  RfqPriorityLevel,
+  AnalyticsTier,
+  SubscriptionStatus,
+  ProductStatus,
+  ShippingMethodType,
+  PaymentStatusType,
+  FulfillmentStatusType,
+  RfqStatusType,
+  QuoteStatusType,
+  PayoutStatusType,
+  LedgerTransactionType,
+} from '@prisma/client';

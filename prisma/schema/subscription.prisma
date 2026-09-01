@@ -1,41 +1,43 @@
-// Subscription Plans & Memberships
+// ============================================================================
+// 3. SUBSCRIPTION SYSTEM
+// ============================================================================
 
 model SubscriptionPlan {
-  id               String         @id @default(uuid())
-  tier             MembershipTier @unique
-  name             String
-  priceMonthly     Decimal        @db.Decimal(10, 2)
-  priceAnnually    Decimal?       @db.Decimal(10, 2)
-  maxProducts      Int            @default(50)
-  maxMonthlyQuotes Int            @default(20)
-  verifiedBadge    Boolean        @default(false)
-  priorityRanking  Boolean        @default(false)
-  dedicatedSupport Boolean        @default(false)
-  description      String?
-  features         Json?
-  isActive         Boolean        @default(true)
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
+  id               String               @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name             String               @db.VarChar(100)
+  planCode         String               @unique @map("plan_code") @db.VarChar(50)
+  monthlyPrice     Decimal              @map("monthly_price") @db.Decimal(10, 2)
+  annualPrice      Decimal              @map("annual_price") @db.Decimal(10, 2)
+  productLimit     Int                  @default(50) @map("product_limit")
+  hasBadge         Boolean              @default(true) @map("has_badge")
+  rfqPriority      RfqPriorityLevel     @default(NORMAL) @map("rfq_priority")
+  analyticsAccess  AnalyticsTier        @default(BASIC) @map("analytics_access")
+  commissionRate   Decimal              @default(10.00) @map("commission_rate") @db.Decimal(5, 2)
+  features         Json?                @default("[]")
+  isActive         Boolean              @default(true) @map("is_active")
+  createdAt        DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  subscriptions    Subscription[]
+  subscriptions    SellerSubscription[]
 
   @@map("subscription_plans")
 }
 
-model Subscription {
-  id                 String             @id @default(uuid())
-  sellerProfileId    String
-  planId             String
-  status             SubscriptionStatus @default(ACTIVE)
-  currentPeriodStart DateTime           @default(now())
-  currentPeriodEnd   DateTime
-  cancelAtPeriodEnd  Boolean            @default(false)
-  paymentReference   String?
-  createdAt          DateTime           @default(now())
-  updatedAt          DateTime           @updatedAt
+model SellerSubscription {
+  id                   String             @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  sellerId             String             @map("seller_id") @db.Uuid
+  planId               String             @map("plan_id") @db.Uuid
+  stripeSubscriptionId String?            @unique @map("stripe_subscription_id") @db.VarChar(255)
+  status               SubscriptionStatus @default(ACTIVE)
+  currentPeriodStart   DateTime           @map("current_period_start") @db.Timestamptz(6)
+  currentPeriodEnd     DateTime           @map("current_period_end") @db.Timestamptz(6)
+  cancelAtPeriodEnd    Boolean            @default(false) @map("cancel_at_period_end")
+  createdAt            DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime           @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  sellerProfile      SellerProfile      @relation(fields: [sellerProfileId], references: [id], onDelete: Cascade)
-  plan               SubscriptionPlan   @relation(fields: [planId], references: [id])
+  seller               SellerProfile      @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  plan                 SubscriptionPlan   @relation(fields: [planId], references: [id], onDelete: Restrict)
 
-  @@map("subscriptions")
+  @@index([sellerId], map: "idx_seller_subs_seller")
+  @@index([status], map: "idx_seller_subs_status")
+  @@map("seller_subscriptions")
 }

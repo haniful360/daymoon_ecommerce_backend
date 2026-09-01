@@ -14,7 +14,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: configService.get<string>('JWT_SECRET') || 'daymoon-b2b-secret-jwt-key',
+      secretOrKey:
+        configService.get<string>('JWT_SECRET') || 'daymoon-b2b-secret-jwt-key',
     });
   }
 
@@ -24,8 +25,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       include: { sellerProfile: { select: { id: true } } },
     });
 
-    if (!user || !user.isActive) {
-      throw new UnauthorizedException('User account not found or is deactivated');
+    if (!user || user.status === 'SUSPENDED' || user.deletedAt) {
+      throw new UnauthorizedException('User account not found or is suspended');
     }
 
     return {

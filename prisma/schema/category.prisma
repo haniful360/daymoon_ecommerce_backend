@@ -1,55 +1,21 @@
-// Categories, Category Attributes & Commission Settings
+// ============================================================================
+// 4. CATEGORIES
+// ============================================================================
 
 model Category {
-  id                 String              @id @default(uuid())
-  parentId           String?
-  name               String
-  slug               String              @unique
-  description        String?
-  iconUrl            String?
-  imageUrl           String?
-  level              Int                 @default(1)
-  sortOrder          Int                 @default(0)
-  isActive           Boolean             @default(true)
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
+  id        String     @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name      String     @db.VarChar(150)
+  slug      String     @unique @db.VarChar(150)
+  imageUrl  String?    @map("image_url") @db.VarChar(500)
+  parentId  String?    @map("parent_id") @db.Uuid
+  isActive  Boolean    @default(true) @map("is_active")
+  createdAt DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  parent             Category?           @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: Restrict)
-  children           Category[]          @relation("CategoryHierarchy")
-  attributes         CategoryAttribute[]
-  products           Product[]
-  rfqs               Rfq[]
-  commissionSettings CommissionSetting[]
+  parent    Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children  Category[] @relation("CategoryHierarchy")
+  products  Product[]
+  rfqs      Rfq[]
 
+  @@index([parentId], map: "idx_categories_parent")
   @@map("categories")
 }
-
-model CategoryAttribute {
-  id         String   @id @default(uuid())
-  categoryId String
-  name       String
-  type       String   @default("TEXT")
-  isRequired Boolean  @default(false)
-  options    Json?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-
-  @@map("category_attributes")
-}
-
-model CommissionSetting {
-  id                    String          @id @default(uuid())
-  categoryId            String?
-  sellerTier            MembershipTier?
-  commissionRatePercent Decimal         @default(5.00) @db.Decimal(5, 2)
-  isActive              Boolean         @default(true)
-  createdAt             DateTime        @default(now())
-  updatedAt             DateTime        @updatedAt
-
-  category              Category?       @relation(fields: [categoryId], references: [id])
-
-  @@map("commission_settings")
-}
-

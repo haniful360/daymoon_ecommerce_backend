@@ -1,41 +1,25 @@
-// Product & Factory Reviews and Replies
+// ============================================================================
+// 9. REVIEWS & RATINGS
+// ============================================================================
 
 model Review {
-  id                  String        @id @default(uuid())
-  orderId             String
-  productId           String
-  sellerProfileId     String
-  buyerId             String
-  productRating       Int
-  supplierRating      Int
-  communicationRating Int
-  punctualityRating   Int
-  comment             String        @db.Text
-  mediaUrls           Json?
-  isVerifiedPurchase  Boolean       @default(true)
-  createdAt           DateTime      @default(now())
-  updatedAt           DateTime      @updatedAt
+  id              String        @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  orderId         String?       @map("order_id") @db.Uuid
+  buyerId         String        @map("buyer_id") @db.Uuid
+  sellerId        String        @map("seller_id") @db.Uuid
+  productId       String?       @map("product_id") @db.Uuid
+  rating          Int
+  comment         String?       @db.Text
+  sellerReply     String?       @map("seller_reply") @db.Text
+  sellerRepliedAt DateTime?     @map("seller_replied_at") @db.Timestamptz(6)
+  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  order               Order         @relation(fields: [orderId], references: [id], onDelete: Restrict)
-  product             Product       @relation(fields: [productId], references: [id], onDelete: Restrict)
-  sellerProfile       SellerProfile @relation("SellerReviews", fields: [sellerProfileId], references: [id], onDelete: Restrict)
-  buyer               User          @relation("BuyerReviews", fields: [buyerId], references: [id], onDelete: Restrict)
-  reply               ReviewReply?
+  order           Order?        @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  buyer           User          @relation("BuyerReviews", fields: [buyerId], references: [id], onDelete: Cascade)
+  seller          SellerProfile @relation("SellerReviews", fields: [sellerId], references: [id], onDelete: Cascade)
+  product         Product?      @relation(fields: [productId], references: [id], onDelete: Cascade)
 
+  @@index([sellerId], map: "idx_reviews_seller")
+  @@index([productId], map: "idx_reviews_product")
   @@map("reviews")
 }
-
-model ReviewReply {
-  id              String        @id @default(uuid())
-  reviewId        String        @unique
-  sellerProfileId String
-  replyText       String        @db.Text
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-
-  review          Review        @relation(fields: [reviewId], references: [id], onDelete: Cascade)
-  sellerProfile   SellerProfile @relation(fields: [sellerProfileId], references: [id], onDelete: Cascade)
-
-  @@map("review_replies")
-}
-

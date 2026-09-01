@@ -1,79 +1,50 @@
-// RFQs (Request for Quotations), Technical Drawings & Factory Quotes
+// ============================================================================
+// 8. RFQ (REQUEST FOR QUOTATION) & BIDDING ENGINE
+// ============================================================================
 
 model Rfq {
-  id                 String          @id @default(uuid())
-  rfqNumber          String          @unique
-  buyerId            String
-  categoryId         String
-  title              String
-  description        String          @db.Text
-  targetQuantity     Int
-  targetUnitPrice    Decimal?        @db.Decimal(10, 2)
-  incoterm           Incoterm        @default(FOB)
-  destinationPort    String?
-  targetDeliveryDate DateTime?
-  status             RfqStatus       @default(OPEN)
-  expiryDate         DateTime
-  createdAt          DateTime        @default(now())
-  updatedAt          DateTime        @updatedAt
+  id                     String        @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  buyerId                String        @map("buyer_id") @db.Uuid
+  categoryId             String        @map("category_id") @db.Uuid
+  leadTitle              String        @map("lead_title") @db.VarChar(255)
+  minBudget              Decimal?      @map("min_budget") @db.Decimal(12, 2)
+  maxBudget              Decimal?      @map("max_budget") @db.Decimal(12, 2)
+  targetQuantity         Int           @map("target_quantity")
+  description            String        @db.Text
+  expectedDeliveryDate   DateTime      @map("expected_delivery_date") @db.Date
+  additionalRequirements String?       @map("additional_requirements") @db.Text
+  attachmentUrls         String[]      @default([]) @map("attachment_urls")
+  status                 RfqStatusType @default(OPEN)
+  createdAt              DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt              DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  buyer              User            @relation("BuyerRfqs", fields: [buyerId], references: [id], onDelete: Cascade)
-  category           Category        @relation(fields: [categoryId], references: [id])
-  attachments        RfqAttachment[]
-  quotes             Quote[]
+  buyer                  User          @relation("BuyerRfqs", fields: [buyerId], references: [id], onDelete: Cascade)
+  category               Category      @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  quotes                 RfqQuote[]
 
+  @@index([buyerId], map: "idx_rfqs_buyer")
+  @@index([categoryId], map: "idx_rfqs_category")
+  @@index([status], map: "idx_rfqs_status")
   @@map("rfqs")
 }
 
-model RfqAttachment {
-  id            String   @id @default(uuid())
-  rfqId         String
-  fileName      String
-  fileUrl       String
-  fileType      String?
-  fileSizeBytes Int?
-  createdAt     DateTime @default(now())
+model RfqQuote {
+  id                   String          @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  rfqId                String          @map("rfq_id") @db.Uuid
+  sellerId             String          @map("seller_id") @db.Uuid
+  offeredUnitPrice     Decimal         @map("offered_unit_price") @db.Decimal(10, 2)
+  totalQuotePrice      Decimal         @map("total_quote_price") @db.Decimal(12, 2)
+  deliveryTimelineDays Int             @map("delivery_timeline_days")
+  notes                String?         @db.Text
+  status               QuoteStatusType @default(PENDING)
+  createdAt            DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  rfq           Rfq      @relation(fields: [rfqId], references: [id], onDelete: Cascade)
+  rfq                  Rfq             @relation(fields: [rfqId], references: [id], onDelete: Cascade)
+  seller               SellerProfile   @relation("SellerRfqQuotes", fields: [sellerId], references: [id], onDelete: Cascade)
 
-  @@map("rfq_attachments")
-}
-
-model Quote {
-  id                 String        @id @default(uuid())
-  quoteNumber        String        @unique
-  rfqId              String
-  sellerProfileId    String
-  unitPrice          Decimal       @db.Decimal(10, 2)
-  totalAmount        Decimal       @db.Decimal(12, 2)
-  moqOffered         Int
-  sampleLeadDays     Int?
-  productionLeadDays Int
-  incotermOffered    Incoterm      @default(FOB)
-  shippingPort       String?
-  paymentTerms       String?
-  validUntil         DateTime
-  status             QuoteStatus   @default(SUBMITTED)
-  sellerNotes        String?       @db.Text
-  createdAt          DateTime      @default(now())
-  updatedAt          DateTime      @updatedAt
-
-  rfq                Rfq           @relation(fields: [rfqId], references: [id], onDelete: Cascade)
-  sellerProfile      SellerProfile @relation(fields: [sellerProfileId], references: [id], onDelete: Cascade)
-  items              QuoteItem[]
-
-  @@map("quotes")
-}
-
-model QuoteItem {
-  id          String   @id @default(uuid())
-  quoteId     String
-  description String
-  quantity    Int
-  unitPrice   Decimal  @db.Decimal(10, 2)
-  subtotal    Decimal  @db.Decimal(12, 2)
-
-  quote       Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
-
-  @@map("quote_items")
+  @@unique([rfqId, sellerId], map: "unique_seller_rfq_quote")
+  @@index([rfqId], map: "idx_rfq_quotes_rfq")
+  @@index([sellerId], map: "idx_rfq_quotes_seller")
+  @@map("rfq_quotes")
 }

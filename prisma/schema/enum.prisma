@@ -1,119 +1,118 @@
-// Centralized B2B Marketplace & Factory Sourcing Enums
+// ============================================================================
+// 1. ENUMS (STRICT DATA INTEGRITY FROM database.sql)
+// ============================================================================
 
-enum Role {
+enum UserRole {
   BUYER
   SELLER
   SUPER_ADMIN
+
+  @@map("user_role")
 }
 
-enum Incoterm {
-  FOB
-  CIF
-  EXW
-  DDP
-  DAP
-  CFR
-  FCA
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  PENDING_VERIFICATION
+
+  @@map("user_status")
 }
 
-enum VerificationStatus {
-  PENDING
-  UNDER_REVIEW
-  APPROVED
-  REJECTED
+enum RfqPriorityLevel {
+  NORMAL
+  HIGH
+  EXCLUSIVE
+
+  @@map("rfq_priority_level")
 }
 
-enum DocumentType {
-  BUSINESS_LICENSE
-  TAX_CERTIFICATE
-  FACTORY_INSPECTION
-  ISO_CERTIFICATE
-  CE_CERTIFICATE
-  BANK_STATEMENT
-  EXPORT_LICENSE
-  OTHER
-}
-
-enum MembershipTier {
-  FREE
+enum AnalyticsTier {
+  NONE
   BASIC
-  STANDARD
-  PREMIUM
+  FULL
+
+  @@map("analytics_tier")
 }
 
 enum SubscriptionStatus {
   ACTIVE
+  CANCELLED
   PAST_DUE
-  CANCELLED
-  EXPIRED
+  TRIALING
+
+  @@map("subscription_status")
 }
 
-enum CustomizationType {
-  CUSTOM_LOGO
-  CUSTOM_PACKAGING
-  GRAPHIC_CUSTOMIZATION
-  OEM_FULL_DESIGN
+enum ProductStatus {
+  DRAFT
+  PUBLISHED
+  OUT_OF_STOCK
+  ARCHIVED
+
+  @@map("product_status")
 }
 
-enum OrderStatus {
-  PENDING_PAYMENT
-  CONFIRMED
-  IN_PRODUCTION
-  QA_INSPECTION
-  READY_FOR_DISPATCH
-  SHIPPED
-  DELIVERED
-  CANCELLED
-  REFUNDED
+enum ShippingMethodType {
+  STANDARD
+  EXPRESS
+  FREIGHT
+
+  @@map("shipping_method_type")
 }
 
-enum PaymentStatus {
+enum PaymentStatusType {
   PENDING
   PAID
   FAILED
   REFUNDED
+  PARTIALLY_REFUNDED
+
+  @@map("payment_status_type")
 }
 
-enum RfqStatus {
-  OPEN
-  UNDER_REVIEW
-  QUOTED
-  ACCEPTED
-  REJECTED
-  EXPIRED
-  CLOSED
-}
-
-enum QuoteStatus {
-  DRAFT
-  SUBMITTED
-  ACCEPTED
-  REJECTED
-  EXPIRED
-}
-
-enum PayoutStatus {
-  REQUESTED
+enum FulfillmentStatusType {
   PROCESSING
-  COMPLETED
-  REJECTED
+  CONFIRMED
+  SHIPPED
+  DELIVERED
   CANCELLED
+  DISPUTED
+
+  @@map("fulfillment_status_type")
 }
 
-enum PayoutMethod {
-  BANK_WIRE
-  SWIFT
-  ACH
-  STRIPE
-  PAYPAL
+enum RfqStatusType {
+  OPEN
+  CLOSED
+  AWARDED
+  EXPIRED
+
+  @@map("rfq_status_type")
+}
+
+enum QuoteStatusType {
+  PENDING
+  ACCEPTED
+  REJECTED
+  WITHDRAWN
+
+  @@map("quote_status_type")
+}
+
+enum PayoutStatusType {
+  PENDING
+  APPROVED
+  PROCESSED
+  REJECTED
+
+  @@map("payout_status_type")
 }
 
 enum LedgerTransactionType {
-  ORDER_COMMISSION
   SUBSCRIPTION_FEE
-  PAYOUT_DISBURSEMENT
-  ORDER_ESCROW_HOLD
-  ORDER_ESCROW_RELEASE
-  REFUND
-}
+  MARKETPLACE_COMMISSION
+  SELLER_PAYOUT
+  REFUND_DEDUCTION
 
+  @@map("ledger_transaction_type")
+}

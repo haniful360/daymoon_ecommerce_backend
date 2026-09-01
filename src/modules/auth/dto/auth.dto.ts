@@ -1,6 +1,52 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
+import { Type } from 'class-transformer';
+import {
+  IsEmail,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MinLength,
+  ValidateNested,
+} from 'class-validator';
 import { UserRole } from '../../../common/enums';
+
+export class BankDetailsDto {
+  @ApiProperty({ example: 'JPMorgan Chase / HSBC' })
+  @IsString()
+  @IsNotEmpty()
+  bankName: string;
+
+  @ApiProperty({ example: 'Shenzhen Apex Electronics Co., Ltd' })
+  @IsString()
+  @IsNotEmpty()
+  accountHolderName: string;
+
+  @ApiProperty({ example: '987654321098' })
+  @IsString()
+  @IsNotEmpty()
+  accountNumber: string;
+
+  @ApiProperty({ example: 'CHASUS33' })
+  @IsString()
+  @IsNotEmpty()
+  swiftCode: string;
+
+  @ApiPropertyOptional({ example: '021000021' })
+  @IsOptional()
+  @IsString()
+  routingNumber?: string;
+
+  @ApiPropertyOptional({ example: 'United States' })
+  @IsOptional()
+  @IsString()
+  bankCountry?: string;
+
+  @ApiPropertyOptional({ example: 'USD' })
+  @IsOptional()
+  @IsString()
+  currency?: string;
+}
 
 export class RegisterDto {
   @ApiProperty({ example: 'buyer@daymoon.com' })
@@ -13,15 +59,10 @@ export class RegisterDto {
   @MinLength(8, { message: 'Password must be at least 8 characters long' })
   password: string;
 
-  @ApiProperty({ example: 'Haniful' })
+  @ApiProperty({ example: 'Haniful Islam' })
   @IsString()
   @IsNotEmpty()
-  firstName: string;
-
-  @ApiProperty({ example: 'Islam' })
-  @IsString()
-  @IsNotEmpty()
-  lastName: string;
+  name: string;
 
   @ApiPropertyOptional({ example: '+1234567890' })
   @IsOptional()
@@ -32,10 +73,29 @@ export class RegisterDto {
   @IsEnum(UserRole)
   role: UserRole;
 
-  @ApiPropertyOptional({ example: 'Shenzhen Apex Electronics Co., Ltd', description: 'Company name required if registering as SELLER' })
+  @ApiPropertyOptional({ example: 'Shenzhen Apex Electronics Co., Ltd', description: 'Business name required if registering as SELLER' })
   @IsOptional()
   @IsString()
-  companyName?: string;
+  businessName?: string;
+
+  @ApiPropertyOptional({ example: 'Manufacturer', description: 'Business type required if registering as SELLER' })
+  @IsOptional()
+  @IsString()
+  businessType?: string;
+
+  @ApiPropertyOptional({ example: 'China', description: 'Country of operation' })
+  @IsOptional()
+  @IsString()
+  country?: string;
+
+  @ApiPropertyOptional({
+    type: BankDetailsDto,
+    description: 'Mandatory bank details for payouts when registering as a SELLER',
+  })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => BankDetailsDto)
+  bankDetails?: BankDetailsDto;
 }
 
 export class LoginDto {

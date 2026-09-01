@@ -1,83 +1,41 @@
-// Seller, Factory and Verification Documents Models
+// ============================================================================
+// 3. SELLER PROFILES
+// ============================================================================
 
 model SellerProfile {
-  id                    String             @id @default(uuid())
-  userId                String             @unique
-  companyName           String
-  storeSlug             String             @unique
-  businessType          String
-  yearEstablished       Int?
-  totalEmployees        String?
-  registeredCapital     String?
-  annualRevenue         String?
-  operationalAddress    String
-  city                  String
-  state                 String
-  country               String
-  website               String?
-  logoUrl               String?
-  bannerUrl             String?
-  businessDescription   String             @db.Text
-  verificationStatus    VerificationStatus @default(PENDING)
-  rejectionReason       String?
-  verifiedAt            DateTime?
-  currentTier           MembershipTier     @default(FREE)
-  subscriptionExpiresAt DateTime?
-  onboardingStep        Int                @default(1)
-  isOnboardingComplete  Boolean            @default(false)
-  createdAt             DateTime           @default(now())
-  updatedAt             DateTime           @updatedAt
+  id                    String               @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  userId                String               @unique @map("user_id") @db.Uuid
+  businessName          String               @map("business_name") @db.VarChar(255)
+  businessType          String               @map("business_type") @db.VarChar(100)
+  businessDescription   String?              @map("business_description") @db.Text
+  country               String               @db.VarChar(100)
+  storeLogo             String?              @map("store_logo") @db.VarChar(500)
+  storeBanner           String?              @map("store_banner") @db.VarChar(500)
+  socialLinks           Json?                @default("{}") @map("social_links")
+  shippingRegions       String[]             @default(["NATIONAL"]) @map("shipping_regions")
+  returnPolicy          String?              @default("7 Days") @map("return_policy") @db.VarChar(100)
+  taxId                 String?              @map("tax_id") @db.VarChar(100)
+  bankDetails           Json                 @map("bank_details") // Required: bank account details / wire / payout account
+  isVerified            Boolean              @default(false) @map("is_verified")
+  verificationDocuments Json?                @default("[]") @map("verification_documents")
+  yearsInBusiness       Int?                 @default(1) @map("years_in_business")
+  factorySize           String?              @map("factory_size") @db.VarChar(100)
+  rdStaffCount          String?              @map("rd_staff_count") @db.VarChar(100)
+  tradeTerms            String[]             @default(["FOB", "EXW"]) @map("trade_terms")
+  averageRating         Decimal              @default(0.00) @map("average_rating") @db.Decimal(3, 2)
+  totalReviews          Int                  @default(0) @map("total_reviews")
+  createdAt             DateTime             @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt             DateTime             @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
 
-  user                  User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  factoryDetail         FactoryDetail?
-  documents             SellerDocument[]
-  subscriptions         Subscription[]
+  user                  User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscriptions         SellerSubscription[]
   products              Product[]
-  orders                Order[]            @relation("SellerOrders")
-  quotes                Quote[]
-  reviews               Review[]           @relation("SellerReviews")
-  reviewReplies         ReviewReply[]
-  payoutRequests        PayoutRequest[]
+  orderItems            OrderItem[]          @relation("SellerOrderItems")
+  payoutRequests        PayoutRequest[]      @relation("SellerPayoutRequests")
+  rfqQuotes             RfqQuote[]           @relation("SellerRfqQuotes")
+  reviews               Review[]             @relation("SellerReviews")
 
+  @@index([businessName], map: "idx_seller_profiles_business_name")
+  @@index([averageRating(sort: Desc)], map: "idx_seller_profiles_rating")
   @@map("seller_profiles")
-}
-
-model FactoryDetail {
-  id                   String        @id @default(uuid())
-  sellerProfileId      String        @unique
-  factorySizeSqMeters  Float?
-  productionLinesCount Int           @default(1)
-  annualOutputValue    String?
-  mainEquipment        String?       @db.Text
-  rdStaffCount         Int           @default(0)
-  qcStaffCount         Int           @default(0)
-  oemExperienceYears   Int           @default(0)
-  leadTimeDaysAvg      Int           @default(15)
-  factoryAddress       String?
-  createdAt            DateTime      @default(now())
-  updatedAt            DateTime      @updatedAt
-
-  sellerProfile        SellerProfile @relation(fields: [sellerProfileId], references: [id], onDelete: Cascade)
-
-  @@map("factory_details")
-}
-
-model SellerDocument {
-  id              String        @id @default(uuid())
-  sellerProfileId String
-  documentType    DocumentType
-  documentName    String
-  documentNumber  String?
-  fileUrl         String
-  issueDate       DateTime?
-  expiryDate      DateTime?
-  isAudited       Boolean       @default(false)
-  auditNotes      String?
-  verifiedAt      DateTime?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-
-  sellerProfile   SellerProfile @relation(fields: [sellerProfileId], references: [id], onDelete: Cascade)
-
-  @@map("seller_documents")
 }

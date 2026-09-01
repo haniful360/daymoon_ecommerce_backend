@@ -1,33 +1,37 @@
-// Payouts & Financial Ledger Models
+// ============================================================================
+// 7. FINANCIAL LEDGER & SELLER PAYOUT REQUESTS
+// ============================================================================
 
-model PayoutRequest {
-  id                   String        @id @default(uuid())
-  sellerProfileId      String
-  amount               Decimal       @db.Decimal(12, 2)
-  currency             String        @default("USD")
-  payoutMethod         PayoutMethod  @default(BANK_WIRE)
-  payoutAccountDetails Json
-  status               PayoutStatus  @default(REQUESTED)
-  transactionReference String?
-  adminNote            String?
-  requestedAt          DateTime      @default(now())
-  processedAt          DateTime?
+model PlatformEarningsLedger {
+  id              String                @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  transactionType LedgerTransactionType @map("transaction_type")
+  referenceId     String                @map("reference_id") @db.Uuid
+  grossAmount     Decimal               @map("gross_amount") @db.Decimal(12, 2)
+  feeDeducted     Decimal               @default(0.00) @map("fee_deducted") @db.Decimal(12, 2)
+  netAmount       Decimal               @map("net_amount") @db.Decimal(12, 2)
+  currency        String                @default("USD") @db.VarChar(10)
+  createdAt       DateTime              @default(now()) @map("created_at") @db.Timestamptz(6)
 
-  sellerProfile        SellerProfile @relation(fields: [sellerProfileId], references: [id], onDelete: Restrict)
-
-  @@map("payout_requests")
+  @@index([transactionType], map: "idx_ledger_type")
+  @@map("platform_earnings_ledger")
 }
 
-model FinancialLedger {
-  id              String                @id @default(uuid())
-  transactionType LedgerTransactionType
-  amount          Decimal               @db.Decimal(12, 2)
-  currency        String                @default("USD")
-  referenceType   String
-  referenceId     String
-  balanceAfter    Decimal               @db.Decimal(12, 2)
-  note            String?
-  createdAt       DateTime              @default(now())
+model PayoutRequest {
+  id                   String           @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  sellerId             String           @map("seller_id") @db.Uuid
+  requestedAmount      Decimal          @map("requested_amount") @db.Decimal(12, 2)
+  status               PayoutStatusType @default(PENDING)
+  paymentMethod        String?          @default("BANK_TRANSFER") @map("payment_method") @db.VarChar(50)
+  processedBy          String?          @map("processed_by") @db.Uuid
+  transactionReference String?          @map("transaction_reference") @db.VarChar(255)
+  adminNotes           String?          @map("admin_notes") @db.Text
+  requestedAt          DateTime         @default(now()) @map("requested_at") @db.Timestamptz(6)
+  processedAt          DateTime?        @map("processed_at") @db.Timestamptz(6)
 
-  @@map("financial_ledgers")
+  seller               SellerProfile    @relation("SellerPayoutRequests", fields: [sellerId], references: [id], onDelete: Restrict)
+  processor            User?            @relation("AdminProcessedPayouts", fields: [processedBy], references: [id], onDelete: SetNull)
+
+  @@index([sellerId], map: "idx_payout_seller")
+  @@index([status], map: "idx_payout_status")
+  @@map("payout_requests")
 }
