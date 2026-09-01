@@ -1,6 +1,7 @@
 import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import compression from 'compression';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters';
 import {
@@ -11,6 +12,9 @@ import {
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
   const app = await NestFactory.create(AppModule);
+
+  // Gzip Compression Middleware (Reduces JSON response payload size by 60-80%)
+  app.use(compression());
 
   // Set API Global Prefix
   app.setGlobalPrefix('api/v1');
