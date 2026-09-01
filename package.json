@@ -16,7 +16,7 @@
     "prisma:validate": "prisma validate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
-    "prisma:seed": "ts-node --transpile-only prisma/seed.ts",
+    "prisma:seed": "ts-node --transpile-only prisma/seeds/seed.ts",
     "prisma:reset": "prisma migrate reset --force && prisma generate",
     "docker:up": "docker compose up -d postgres",
     "docker:all": "docker compose up -d --build",
@@ -105,5 +105,8 @@
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"
+  },
+  "prisma": {
+    "seed": "ts-node --transpile-only prisma/seeds/seed.ts"
   }
 }

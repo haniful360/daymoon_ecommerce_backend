@@ -11,6 +11,7 @@ import {
   cloudinaryConfig,
   databaseConfig,
   stripeConfig,
+  seedConfig,
 } from './config';
 
 @Module({
@@ -24,6 +25,7 @@ import {
         cloudinaryConfig,
         databaseConfig,
         stripeConfig,
+        seedConfig,
       ],
     }),
     PrismaModule,

@@ -15,22 +15,22 @@ export class BankDetailsDto {
   @ApiProperty({ example: 'JPMorgan Chase / HSBC' })
   @IsString()
   @IsNotEmpty()
-  bankName: string;
+  bankName!: string;
 
   @ApiProperty({ example: 'Shenzhen Apex Electronics Co., Ltd' })
   @IsString()
   @IsNotEmpty()
-  accountHolderName: string;
+  accountHolderName!: string;
 
   @ApiProperty({ example: '987654321098' })
   @IsString()
   @IsNotEmpty()
-  accountNumber: string;
+  accountNumber!: string;
 
   @ApiProperty({ example: 'CHASUS33' })
   @IsString()
   @IsNotEmpty()
-  swiftCode: string;
+  swiftCode!: string;
 
   @ApiPropertyOptional({ example: '021000021' })
   @IsOptional()
@@ -52,17 +52,17 @@ export class RegisterDto {
   @ApiProperty({ example: 'buyer@daymoon.com' })
   @IsEmail({}, { message: 'Please provide a valid email address' })
   @IsNotEmpty()
-  email: string;
+  email!: string;
 
   @ApiProperty({ example: 'SecurePassword123!', minLength: 8 })
   @IsString()
   @MinLength(8, { message: 'Password must be at least 8 characters long' })
-  password: string;
+  password!: string;
 
   @ApiProperty({ example: 'Haniful Islam' })
   @IsString()
   @IsNotEmpty()
-  name: string;
+  name!: string;
 
   @ApiPropertyOptional({ example: '+1234567890' })
   @IsOptional()
@@ -71,7 +71,7 @@ export class RegisterDto {
 
   @ApiProperty({ enum: UserRole, default: UserRole.BUYER, description: 'Role of the new account (BUYER or SELLER)' })
   @IsEnum(UserRole)
-  role: UserRole;
+  role!: UserRole;
 
   @ApiPropertyOptional({ example: 'Shenzhen Apex Electronics Co., Ltd', description: 'Business name required if registering as SELLER' })
   @IsOptional()
@@ -102,29 +102,29 @@ export class LoginDto {
   @ApiProperty({ example: 'buyer@daymoon.com' })
   @IsEmail()
   @IsNotEmpty()
-  email: string;
+  email!: string;
 
   @ApiProperty({ example: 'SecurePassword123!' })
   @IsString()
   @IsNotEmpty()
-  password: string;
+  password!: string;
 }
 
 export class RefreshTokenDto {
   @ApiProperty({ description: 'Refresh JWT token' })
   @IsString()
   @IsNotEmpty()
-  refreshToken: string;
+  refreshToken!: string;
 }
 
 export class ChangePasswordDto {
   @ApiProperty({ example: 'CurrentPassword123!' })
   @IsString()
   @IsNotEmpty()
-  currentPassword: string;
+  currentPassword!: string;
 
   @ApiProperty({ example: 'NewSecurePassword123!', minLength: 8 })
   @IsString()
   @MinLength(8)
-  newPassword: string;
+  newPassword!: string;
 }
