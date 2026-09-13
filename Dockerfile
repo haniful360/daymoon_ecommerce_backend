@@ -11,6 +11,9 @@ RUN apk add --no-cache python3 make g++ libc6-compat
 # Enable pnpm via corepack
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
+# Build-time dummy DATABASE_URL for Prisma client code generation
+ENV DATABASE_URL="postgresql://postgres:postgres@localhost:5432/daymoon_db?schema=public"
+
 # Copy dependency definitions and Prisma schema files
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml* ./
 COPY prisma ./prisma/
