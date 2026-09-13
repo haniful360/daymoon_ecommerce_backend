@@ -3,7 +3,7 @@
 // ============================================================================
 
 model Product {
-  id                   String                @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id                   String                @id @default(uuid()) @db.Uuid
   sellerId             String                @map("seller_id") @db.Uuid
   categoryId           String                @map("category_id") @db.Uuid
   title                String                @db.VarChar(255)
@@ -34,7 +34,7 @@ model Product {
 }
 
 model TieredPricing {
-  id          String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id          String   @id @default(uuid()) @db.Uuid
   productId   String   @map("product_id") @db.Uuid
   minQuantity Int      @map("min_quantity")
   maxQuantity Int?     @map("max_quantity")
@@ -48,7 +48,7 @@ model TieredPricing {
 }
 
 model ProductVariant {
-  id            String      @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id            String      @id @default(uuid()) @db.Uuid
   productId     String      @map("product_id") @db.Uuid
   colorName     String?     @map("color_name") @db.VarChar(50)
   colorCode     String?     @map("color_code") @db.VarChar(20)
@@ -67,7 +67,7 @@ model ProductVariant {
 }
 
 model CustomizationOption {
-  id                     String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id                     String   @id @default(uuid()) @db.Uuid
   productId              String   @map("product_id") @db.Uuid
   optionType             String   @map("option_type") @db.VarChar(150)
   additionalPricePerUnit Decimal  @default(0.00) @map("additional_price_per_unit") @db.Decimal(10, 2)

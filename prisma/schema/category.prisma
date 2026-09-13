@@ -3,7 +3,7 @@
 // ============================================================================
 
 model Category {
-  id        String     @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id        String     @id @default(uuid()) @db.Uuid
   name      String     @db.VarChar(150)
   slug      String     @unique @db.VarChar(150)
   imageUrl  String?    @map("image_url") @db.VarChar(500)

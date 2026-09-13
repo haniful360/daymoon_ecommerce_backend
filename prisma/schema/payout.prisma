@@ -3,7 +3,7 @@
 // ============================================================================
 
 model PlatformEarningsLedger {
-  id              String                @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id              String                @id @default(uuid()) @db.Uuid
   transactionType LedgerTransactionType @map("transaction_type")
   referenceId     String                @map("reference_id") @db.Uuid
   grossAmount     Decimal               @map("gross_amount") @db.Decimal(12, 2)
@@ -17,7 +17,7 @@ model PlatformEarningsLedger {
 }
 
 model PayoutRequest {
-  id                   String           @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id                   String           @id @default(uuid()) @db.Uuid
   sellerId             String           @map("seller_id") @db.Uuid
   requestedAmount      Decimal          @map("requested_amount") @db.Decimal(12, 2)
   status               PayoutStatusType @default(PENDING)

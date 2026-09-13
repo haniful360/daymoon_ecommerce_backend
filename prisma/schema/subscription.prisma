@@ -3,7 +3,7 @@
 // ============================================================================
 
 model SubscriptionPlan {
-  id               String               @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id               String               @id @default(uuid()) @db.Uuid
   name             String               @db.VarChar(100)
   planCode         String               @unique @map("plan_code") @db.VarChar(50)
   monthlyPrice     Decimal              @map("monthly_price") @db.Decimal(10, 2)
@@ -23,7 +23,7 @@ model SubscriptionPlan {
 }
 
 model SellerSubscription {
-  id                   String             @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id                   String             @id @default(uuid()) @db.Uuid
   sellerId             String             @map("seller_id") @db.Uuid
   planId               String             @map("plan_id") @db.Uuid
   stripeSubscriptionId String?            @unique @map("stripe_subscription_id") @db.VarChar(255)
