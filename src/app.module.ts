@@ -8,10 +8,14 @@ import {
   cloudinaryConfig,
   databaseConfig,
   jwtConfig,
+  mailConfig,
+  redisConfig,
   seedConfig,
   stripeConfig,
 } from './config';
 import { AuthModule } from './modules/auth/auth.module';
+import { MailModule } from './modules/mail/mail.module';
+import { RedisModule } from './modules/redis/redis.module';
 import { SellerModule } from './modules/seller/seller.module';
 import { UploadModule } from './modules/upload/upload.module';
 import { PrismaModule } from './prisma/prisma.module';
@@ -28,9 +32,13 @@ import { PrismaModule } from './prisma/prisma.module';
         databaseConfig,
         stripeConfig,
         seedConfig,
+        redisConfig,
+        mailConfig,
       ],
     }),
     PrismaModule,
+    RedisModule,
+    MailModule,
     UploadModule,
     AuthModule,
     SellerModule,

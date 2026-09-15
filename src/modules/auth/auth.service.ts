@@ -10,7 +10,15 @@ import * as bcrypt from 'bcrypt';
 import { UserRole } from '../../common/enums';
 import type { JwtPayload } from '../../common/interfaces';
 import { PrismaService } from '../../prisma/prisma.service';
-import { ChangePasswordDto, LoginDto, RegisterDto } from './dto';
+import { MailService } from '../mail/mail.service';
+import { RedisService } from '../redis/redis.service';
+import {
+  ChangePasswordDto,
+  LoginDto,
+  RegisterBuyerDto,
+  RegisterDto,
+  SendOtpDto,
+} from './dto';
 
 @Injectable()
 export class AuthService {
@@ -18,6 +26,8 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly redisService: RedisService,
+    private readonly mailService: MailService,
   ) {}
 
   async register(dto: RegisterDto) {
@@ -78,6 +88,138 @@ export class AuthService {
     };
   }
 
+  /**
+   * Send 6-digit verification OTP to Buyer's email stored in Redis (5 min TTL)
+   */
+  async sendBuyerOtp(dto: SendOtpDto) {
+    const normalizedEmail = dto.email.toLowerCase().trim();
+
+    const existingUser = await this.prisma.user.findUnique({
+      where: { email: normalizedEmail },
+    });
+
+    if (existingUser && existingUser.status === 'ACTIVE') {
+      throw new ConflictException(
+        'An account with this email already exists. Please login.',
+      );
+    }
+
+    // Rate-limiting: prevent spamming resend OTP within 60 seconds
+    const cooldownKey = `otp_cooldown:${normalizedEmail}`;
+    const isCoolingDown = await this.redisService.exists(cooldownKey);
+    if (isCoolingDown) {
+      throw new BadRequestException(
+        'Please wait 60 seconds before requesting a new OTP.',
+      );
+    }
+
+    // Generate random 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Store in Redis with 300 seconds (5 mins) TTL
+    const otpKey = `otp:buyer:${normalizedEmail}`;
+    await this.redisService.set(otpKey, otp, 300);
+    // Set 60-second cooldown
+    await this.redisService.set(cooldownKey, '1', 60);
+
+    // Send email using Handlebars template
+    await this.mailService.sendOtpEmail({
+      to: normalizedEmail,
+      name: dto.name?.trim() || 'Valued Buyer',
+      otp,
+      expiresInMinutes: 5,
+    });
+
+    return {
+      success: true,
+      message: 'Verification OTP has been sent to your email address.',
+      expiresIn: 300,
+    };
+  }
+
+  /**
+   * Complete Buyer Registration after verifying OTP from Redis
+   */
+  async registerBuyer(dto: RegisterBuyerDto) {
+    const normalizedEmail = dto.email.toLowerCase().trim();
+
+    // 1. Verify OTP from Redis
+    const otpKey = `otp:buyer:${normalizedEmail}`;
+    const storedOtp = await this.redisService.get(otpKey);
+
+    if (!storedOtp) {
+      throw new BadRequestException(
+        'Verification OTP has expired or is invalid. Please request a new OTP.',
+      );
+    }
+
+    if (storedOtp !== dto.otp.trim()) {
+      throw new BadRequestException(
+        'Invalid verification code. Please check your email and try again.',
+      );
+    }
+
+    // 2. Check if user already exists
+    const existingUser = await this.prisma.user.findUnique({
+      where: { email: normalizedEmail },
+    });
+
+    if (existingUser && existingUser.status === 'ACTIVE') {
+      throw new ConflictException(
+        'An account with this email already exists. Please login.',
+      );
+    }
+
+    // 3. Hash password
+    const saltRounds = 10;
+    const passwordHash = await bcrypt.hash(dto.password, saltRounds);
+
+    // 4. Create or update user as verified BUYER
+    let user;
+    if (existingUser) {
+      user = await this.prisma.user.update({
+        where: { id: existingUser.id },
+        data: {
+          name: dto.name.trim(),
+          passwordHash,
+          phone: dto.phone?.trim() ?? null,
+          role: UserRole.BUYER,
+          status: 'ACTIVE',
+        },
+      });
+    } else {
+      user = await this.prisma.user.create({
+        data: {
+          name: dto.name.trim(),
+          email: normalizedEmail,
+          passwordHash,
+          phone: dto.phone?.trim() ?? null,
+          role: UserRole.BUYER,
+          status: 'ACTIVE',
+        },
+      });
+    }
+
+    // 5. Clean up Redis OTP
+    await this.redisService.del(otpKey);
+    await this.redisService.del(`otp_cooldown:${normalizedEmail}`);
+
+    // 6. Generate JWT tokens
+    const tokens = await this.generateTokens(user.id, user.email, user.role);
+
+    return {
+      message: 'Buyer account registered and verified successfully.',
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        status: user.status,
+      },
+      ...tokens,
+    };
+  }
+
   async login(dto: LoginDto) {
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email.toLowerCase() },
@@ -89,10 +231,15 @@ export class AuthService {
     }
 
     if (user.status === 'SUSPENDED') {
-      throw new UnauthorizedException('Your account has been suspended. Please contact support.');
+      throw new UnauthorizedException(
+        'Your account has been suspended. Please contact support.',
+      );
     }
 
-    const isPasswordValid = await bcrypt.compare(dto.password, user.passwordHash);
+    const isPasswordValid = await bcrypt.compare(
+      dto.password,
+      user.passwordHash,
+    );
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid email or password');
     }
@@ -143,7 +290,10 @@ export class AuthService {
       throw new UnauthorizedException('User not found');
     }
 
-    const isValid = await bcrypt.compare(dto.currentPassword, user.passwordHash);
+    const isValid = await bcrypt.compare(
+      dto.currentPassword,
+      user.passwordHash,
+    );
     if (!isValid) {
       throw new BadRequestException('Current password does not match');
     }
@@ -202,7 +352,9 @@ export class AuthService {
       }),
       this.jwtService.signAsync(payload, {
         secret: this.configService.get<string>('JWT_REFRESH_SECRET') as string,
-        expiresIn: this.configService.get<string>('JWT_REFRESH_EXPIRES_IN') as any,
+        expiresIn: this.configService.get<string>(
+          'JWT_REFRESH_EXPIRES_IN',
+        ) as any,
       }),
     ]);
 
