@@ -7,17 +7,59 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { CurrentUser, Public } from '../../common/decorators';
 import { JwtAuthGuard } from '../../common/guards';
 import type { AuthenticatedUser } from '../../common/interfaces';
 import { AuthService } from './auth.service';
-import { ChangePasswordDto, LoginDto, RefreshTokenDto, RegisterDto } from './dto';
+import {
+  ChangePasswordDto,
+  LoginDto,
+  RefreshTokenDto,
+  RegisterBuyerDto,
+  RegisterDto,
+  SendOtpDto,
+} from './dto';
 
 @ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
+
+  @Public()
+  @Post('buyer/send-otp')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Send 6-digit verification OTP to email for Buyer registration',
+  })
+  @ApiResponse({
+    status: 200,
+    description:
+      'OTP successfully sent to recipient email and stored in Redis (5 min TTL)',
+  })
+  async sendBuyerOtp(@Body() dto: SendOtpDto) {
+    return this.authService.sendBuyerOtp(dto);
+  }
+
+  @Public()
+  @Post('buyer/register')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: 'Verify OTP from Redis and complete Buyer registration',
+  })
+  @ApiResponse({
+    status: 201,
+    description:
+      'Buyer account registered and verified, JWT access tokens issued',
+  })
+  async registerBuyer(@Body() dto: RegisterBuyerDto) {
+    return this.authService.registerBuyer(dto);
+  }
 
   @Public()
   @Post('register')
@@ -47,7 +89,9 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @Get('me')
-  @ApiOperation({ summary: 'Get current authenticated user profile & supplier details' })
+  @ApiOperation({
+    summary: 'Get current authenticated user profile & supplier details',
+  })
   async getMe(@CurrentUser() user: AuthenticatedUser) {
     return this.authService.getMe(user.id);
   }
