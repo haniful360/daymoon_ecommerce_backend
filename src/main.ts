@@ -54,6 +54,10 @@ async function bootstrap() {
     .setVersion('1.0.0')
     .addBearerAuth()
     .addTag('Authentication', 'User registration, login, JWT token refresh')
+    .addTag(
+      'Sellers & Factory Profiles',
+      'Seller registration with form-data, factory profiles, store updates',
+    )
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

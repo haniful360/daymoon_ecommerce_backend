@@ -14,6 +14,16 @@ export const ApiBearerAuth =
 export const ApiProperty = (options?: any) => (target: any, key?: any) => {};
 export const ApiPropertyOptional =
   (options?: any) => (target: any, key?: any) => {};
+export const ApiConsumes =
+  (...mimeTypes: string[]) =>
+  (target: any, key?: any, desc?: any) =>
+    desc;
+export const ApiQuery =
+  (options?: any) => (target: any, key?: any, desc?: any) =>
+    desc;
+export const ApiBody =
+  (options?: any) => (target: any, key?: any, desc?: any) =>
+    desc;
 
 export class DocumentBuilder {
   setTitle() {
